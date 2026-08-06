@@ -1,0 +1,6 @@
+{
+  "repository": "auto-pigeon-libraries",
+  "alias": "AULIBS",
+  "prompt_directory": "auto-pigeon-libraries",
+  "handoff_directory": "auto-pigeon-libraries"
+}

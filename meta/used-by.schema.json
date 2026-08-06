@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/auto-pigeon/auto-pigeon-libraries/meta/used-by.schema.json",
+  "title": "AULIBS package consumer manifest",
+  "description": "Every package folder under ts/ or go/ carries a used-by.json validating against this schema. It names the repositories that consume the package, so an agent changing the package knows what it may break.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["package", "consumers"],
+  "properties": {
+    "package": {
+      "type": "string",
+      "description": "This package's path within the repository, e.g. \"ts/apmap\".",
+      "pattern": "^(ts|go)/[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "consumers": {
+      "type": "array",
+      "description": "Repositories that consume this package. Empty is valid and is the normal state of a package nobody has adopted yet.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["repo", "usage", "added"],
+        "properties": {
+          "repo": {
+            "type": "string",
+            "description": "The consuming sibling repository's folder name, e.g. \"auto-pigeon\".",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "usage": {
+            "type": "string",
+            "description": "One line on what that repository uses this package for.",
+            "minLength": 1
+          },
+          "added": {
+            "type": "string",
+            "description": "Date the consumer adopted the package, ISO 8601 calendar date (YYYY-MM-DD).",
+            "format": "date",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          }
+        }
+      }
+    }
+  }
+}
