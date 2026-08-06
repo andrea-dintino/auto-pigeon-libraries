@@ -37,8 +37,12 @@ Every package folder carries its own `README.md` and its own `used-by.json`,
 which names the repositories that consume it and validates against
 `meta/used-by.schema.json`.
 
-There are no packages yet. The apmap schema and the TypeScript apmap library
-are the first to land.
+| package | what it is |
+| --- | --- |
+| [`ts/apmap-schema`](ts/apmap-schema/) | the canonical JSON Schema for APMap, the native geometry document format — 1.1, plus 1.0 frozen for converters and archived documents. Schema and conformance vectors only. |
+
+The TypeScript APMap reader/writer/validator is next; it will consume
+`apmap-schema` rather than carry its own copy.
 
 ## Running the tests
 
@@ -47,12 +51,13 @@ are the first to land.
 ```
 
 It runs every TypeScript package's own `test` script and, once Go packages
-exist, `go test ./...`. With no packages present it exits 0 and says so:
+exist, `go test ./...`. A package whose dependencies are not installed yet gets
+them installed on that first run. With no packages present at all it exits 0 and
+says there is nothing to test, rather than failing or printing a green summary
+for a suite that never ran.
 
-```text
-run.sh: no packages yet — nothing to test.
-run.sh: ts/ and go/ hold no package; this is the expected state until the first package lands.
-```
+Some tests read the mapper corpus at `$MAPPER_ROOT`, which is not part of this
+repository. From a bare clone those skip, saying so, and everything else runs.
 
 ## Using a package
 

@@ -1,0 +1,24 @@
+{
+  "name": "@auto-pigeon/apmap-schema",
+  "version": "1.1.0",
+  "description": "The canonical APMap JSON Schema. Schema documents and their conformance vectors; no runtime code.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "schema",
+    "test-vectors",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./schema/apmap-1.1.schema.json",
+    "./1.1": "./schema/apmap-1.1.schema.json",
+    "./1.0": "./schema/apmap-1.0.schema.json",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0"
+  }
+}

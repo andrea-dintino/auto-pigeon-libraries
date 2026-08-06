@@ -1,0 +1,91 @@
+{
+  "apmap_version": "1.1",
+  "description": "Conformance vectors for APMap 1.1, in the shape the published 1.0 vectors use at $MAPPER_ROOT/formats/apmap/1.0/test-vectors/. Every valid vector must be accepted by apmap-1.1.schema.json; every invalid one must be rejected, and rejected for the reason recorded here rather than incidentally.",
+  "valid": [
+    {
+      "file": "operation-derived-brush.apmap",
+      "exercises": "derived_from kind 'operation' on a brush, with every optional member present: operation, ordinal, replaces, intent."
+    },
+    {
+      "file": "operation-derived-minimal.apmap",
+      "exercises": "derived_from kind 'operation' carrying nothing but kind and operation_id — the documented minimum."
+    },
+    {
+      "file": "operation-derived-entity-and-face.apmap",
+      "exercises": "operation provenance on all three object kinds at once: entity, brush, and face, the face using the free-form metadata member."
+    },
+    {
+      "file": "broken-brush.apmap",
+      "exercises": "broken: true on a brush item."
+    },
+    {
+      "file": "broken-brush-false.apmap",
+      "exercises": "broken: false written explicitly. Absent means false, but a producer that writes it is not in error."
+    },
+    {
+      "file": "no-1-1-features.apmap",
+      "exercises": "a document declaring 1.1 and using neither addition. 1.1 requires nothing new of a producer."
+    },
+    {
+      "file": "one-zero-document.apmap",
+      "exercises": "apmap_version 1.0, byte-identical in shape to the 1.1 vector beside it. The compatibility promise, in one file: a 1.0 document is a valid 1.1 document."
+    }
+  ],
+  "invalid": [
+    {
+      "file": "unknown-derived-from-kind.apmap",
+      "rule": "1.1-DF-1",
+      "violation": "derived_from kind 'rewrite' matches none of the five defined kinds, so the oneOf matches nothing. A new provenance kind is a schema change, never a producer's invention.",
+      "expect_fragment": {
+        "pointer": "/entities/0/content/1/derived_from",
+        "def": "derived_from",
+        "keyword": "oneOf",
+        "instancePath": ""
+      }
+    },
+    {
+      "file": "operation-missing-operation-id.apmap",
+      "rule": "1.1-DF-2",
+      "violation": "kind 'operation' without operation_id. The operation that produced the object is the one member beyond kind that is always required; without it the record names no cause.",
+      "expect_fragment": {
+        "pointer": "/entities/0/content/1/derived_from",
+        "def": "derived_from_operation",
+        "keyword": "required",
+        "instancePath": "",
+        "missingProperty": "operation_id"
+      }
+    },
+    {
+      "file": "operation-unknown-member.apmap",
+      "rule": "1.1-DF-3",
+      "violation": "kind 'operation' carrying an undeclared member 'authorized'. additionalProperties is false, so a producer cannot introduce a field a consumer might read as permission. Annotation goes in intent or metadata, and neither authorizes anything.",
+      "expect_fragment": {
+        "pointer": "/entities/0/content/1/derived_from",
+        "def": "derived_from_operation",
+        "keyword": "additionalProperties",
+        "instancePath": "",
+        "additionalProperty": "authorized"
+      }
+    },
+    {
+      "file": "broken-not-boolean.apmap",
+      "rule": "1.1-BR-1",
+      "violation": "broken is the string \"true\", not a boolean. There are two states and absence is the third spelling of false; a truthy string is none of them.",
+      "expect_fragment": {
+        "pointer": "/entities/0/content/1",
+        "def": "brush_item",
+        "keyword": "type",
+        "instancePath": "/broken"
+      }
+    },
+    {
+      "file": "unknown-apmap-version.apmap",
+      "rule": "1.1-VER-1",
+      "violation": "apmap_version \"1.2\" is not a version this schema defines. An unknown version is refused rather than guessed at.",
+      "expect_document": {
+        "keyword": "enum",
+        "instancePath": "/apmap_version"
+      }
+    }
+  ]
+}

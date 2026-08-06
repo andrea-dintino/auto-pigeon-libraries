@@ -23,6 +23,17 @@ run_ts_packages() {
         found=1
         name="${pkg%/}"
         echo "== ${name} =="
+        # Install on first run rather than failing with a module-not-found from inside the test
+        # runner, which says nothing about what to do. `npm ci` when there is a lockfile, so the
+        # versions tested are the versions recorded.
+        if [ ! -d "$pkg/node_modules" ]; then
+            echo "-- ${name}: installing dependencies (first run)"
+            if [ -f "$pkg/package-lock.json" ]; then
+                (cd "$pkg" && npm ci --no-audit --no-fund) || { status=1; continue; }
+            else
+                (cd "$pkg" && npm install --no-audit --no-fund) || { status=1; continue; }
+            fi
+        fi
         # The package manager's own test script, run from the package directory, so each package
         # owns its runner choice rather than this launcher guessing at one.
         (cd "$pkg" && npm test) || status=$?
