@@ -207,3 +207,48 @@ and documentation. Never `node_modules/`, build output, generated logs, `.env`
 files, or temporary scripts. Do not use `git add .` or `git add -A`.
 
 Handoffs live under `$MAPPER_ROOT/LLM/` and are never staged or committed.
+
+## 9. Component addresses live in `.env`, never in code
+
+**No component may compile in where another component lives.** Not as a constant, not as a
+fallback, not as a "last resort" default, not in a test fixture that production code reads. No
+`localhost`, no `127.0.0.1`, no `192.168.*`, no port number standing in for a service.
+
+### Why this is a rule and not a preference
+
+`20260807_02` was reported like this: *"'Active Sessions' sends me to `http://127.0.0.1:5174/` even
+though in auto-pigeon `.env` there is `AUTO_PIGEON_GALLERY_BASE_URL=http://192.168.0.33:5174/`."*
+Both halves were true at once. Two things had gone wrong and each was invisible on its own:
+
+1. a **duplicate** `AUTO_PIGEON_GALLERY_BASE_URL` line had been appended below the hand-written one,
+   and a `.env` is *sourced*, so the last line silently won;
+2. `launch-aup.sh` set AUG's address in AUP's sibling but never set AUP's copy of AUG's — the link
+   was wired in one direction only.
+
+Neither would have reached a user if the code had had no opinion about where AUG was. Instead a
+compiled-in `127.0.0.1:5174` turned a misconfiguration into a plausible-looking wrong answer, on a
+LAN, where a loopback address means *the reader's own machine* and can never work. A missing address
+that says so gets fixed in an afternoon; a wrong address that looks right gets reported three times.
+
+### What to do instead
+
+- **Add a variable to that component's `.env` / `.env.example`, with a comment saying what reads it.**
+- **Test it**, by running the thing and watching it use the configured value.
+- **Then document it** in this file and in the component's `README.md`.
+- **If you cannot put it in `.env` — stop and ask the human.** Do not invent a fallback address to
+  keep moving.
+- Whoever brings the stack up wires **both** directions. `launch-aup.sh` is the one place that knows
+  the ports that were actually claimed, so it is the one place that writes them into each `.env`.
+
+### The one permitted derivation
+
+A page may use **its own origin** — `location.hostname`, `location.protocol`. That is not a
+hardcoded location, it is the single address the reader is already known to be able to reach, and it
+is the right answer whenever two services are served from one host. A **port** cannot be derived
+that way, so an origin that needs a port needs a variable.
+
+### When the address is missing
+
+Say so, in the place the user is. An unconfigured address is an error the user must act on — in AUP
+that means a modal per `DESIGN.md` §10, naming the variable — never a silent fallback and never a
+button that goes somewhere wrong.
