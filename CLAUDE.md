@@ -60,6 +60,17 @@ coherent phase, so a fresh session can continue without replaying the transcript
 Commit normally on task completion (`AGENTS.md` §8) — this repo does not follow
 AUP's ask-first rule.
 
+# The backlog
+
+Deferred work lives in `$MAPPER_ROOT/LLM/backlog/` — this repo's file would be
+`backlog/auto-pigeon-libraries.md` (nothing deferred here yet, so the first
+deferral creates it), cross-repo items are in `backlog/workspace.md`, and
+`backlog/README.md` is the authority. Read it at task start alongside the
+prompt, and check it before writing a `Next Recommended Task`. Two duties bind:
+a handoff that defers work **appends** the entry in the same task; whoever files
+a prompt covering an entry **deletes** that entry in the same change. Never
+reorder or reprioritise — that is HITL's. `AGENTS.md` has the full section.
+
 # End-of-task marker
 
 The literal last line of every final response is `WORKFLOW.md`'s marker,
