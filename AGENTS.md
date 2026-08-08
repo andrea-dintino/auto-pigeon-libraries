@@ -252,3 +252,31 @@ that way, so an origin that needs a port needs a variable.
 Say so, in the place the user is. An unconfigured address is an error the user must act on — in AUP
 that means a modal per `DESIGN.md` §10, naming the variable — never a silent fallback and never a
 button that goes somewhere wrong.
+
+## 10. The observability doctrine binds
+
+`$MAPPER_ROOT/LLM/DOCTRINE.md` is this workspace's observability doctrine,
+written out of `20260807_06` (AUP's manipulator flicker: four fixes proposed on
+theory, all wrong; the fifth instrumented first and found the cause in the first
+properly-read log). It is **binding here**, in full. Its seven pillars:
+observation before theory; durations are evidence; log at transitions and
+decisions, on change, with sequence counters, never per frame; the structured
+observation request; the human's right to deny and the transfer of risk that
+comes with recording the denial; artifacts flow both ways; handoffs are the case
+law.
+
+A library has a particular obligation under it. Code here runs inside somebody
+else's timing budget, and when a consumer instruments a bug the trail may lead
+into an AULIBS package — so a package that does anything with time, ordering, or
+geometry must be diagnosable from the outside: deterministic, and honest about
+what it did. **Do not add a logging transport to a library.** Each consumer
+already has one (`DEV_MODE`, its own shape), and a library that logs on its own
+lands lines in a file nobody attached. Return or expose what the consumer needs
+in order to log it.
+
+### AULIBS clock table (doctrine pillar 2)
+
+**None yet.** No published package has a characteristic time of its own. The
+first one that does — a codec pass, a validation sweep, anything a consumer will
+sit inside a frame budget for — records its measured time here, in the task that
+introduces it, alongside the consumer and map size it was measured against.

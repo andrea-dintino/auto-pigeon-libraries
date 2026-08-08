@@ -34,6 +34,14 @@ credentials, internal hostnames, or references to private infrastructure.
 mechanism and its unsolved Docker-build-context issue; §7 why this repo has no
 Dockerfile.
 
+# The observability doctrine
+
+`$MAPPER_ROOT/LLM/DOCTRINE.md` is binding here: for anything touching timing,
+concurrency, or geometry a consumer renders, instrument before theorising, and
+name the logged field that changed before naming the fix. When a symptom is
+likely beyond your own perception, stop iterating fixes and ask HITL for an
+observation session. `AGENTS.md` §10 says what it means here.
+
 # Prompts and handoffs
 
 - Prompts: `$MAPPER_ROOT/LLM/prompts/auto-pigeon-libraries/`
