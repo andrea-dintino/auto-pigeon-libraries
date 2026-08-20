@@ -14,17 +14,26 @@ export const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.
 export const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 
 /**
- * THE CURRENT CONTRACT — discovered, never named.
+ * THE CONTRACT BUNDLE — discovered, never named.
  *
- * `schema/` holds exactly one `apmap-*.schema.json`, and its FILENAME carries the current version.
- * Nothing in this repository or any consumer hard-codes "1.1": every service derives it by the same
- * three lines below, so promoting 1.2 is one file rename and no code change anywhere.
+ * `schema/` holds exactly one `apmap-*.schema.json`, and its FILENAME carries the CURRENT version.
+ * `schema/deprecated/` holds zero or more `apmap-*.schema.json`, and each of those is a supported
+ * LEGACY READ contract. Nothing in this repository or any consumer hard-codes "1.0" or "1.1":
+ * every service derives both by the same directory reads below, so promoting 1.2 is one file
+ * rename plus one file move, and no code change anywhere.
  *
- * `schema/deprecated/` is not traversed and cannot participate in discovery. That is not an
- * optimisation — it is the mechanism. A deprecated schema that could be discovered is a deprecated
- * schema that will eventually be loaded by something.
+ * The layout IS the policy:
+ *
+ *     schema/apmap-<v>.schema.json              CURRENT — the only WRITE format
+ *     schema/deprecated/apmap-<v>.schema.json   LEGACY  — readable, never written
+ *
+ * Depth is what separates the two, and it is the mechanism rather than an optimisation: the
+ * current-schema scan reads DIRECT children only, so a deprecated schema can never be mistaken for
+ * the writer's contract. It is loadable, deliberately — "deprecated" means "not current / never
+ * written", not "unreadable". A format that becomes genuinely unreadable moves OUT of this tree.
  */
 export const SCHEMA_DIR = path.join(PACKAGE_ROOT, 'schema');
+export const DEPRECATED_SCHEMA_DIR = path.join(SCHEMA_DIR, 'deprecated');
 export const CURRENT_SCHEMA_PATTERN = /^apmap-(\d+\.\d+)\.schema\.json$/;
 
 /** Every direct child of `schema/` that looks like a current schema. Exactly one is legal. */
@@ -48,6 +57,74 @@ export function currentVersion(directory = SCHEMA_DIR) {
 }
 
 export const loadCurrentSchema = (directory = SCHEMA_DIR) => readJson(currentSchemaPath(directory));
+
+/** Every `apmap-*.schema.json` directly under `<directory>/deprecated/`. Zero or more are legal. */
+export function legacySchemaFiles(directory = SCHEMA_DIR) {
+  const deprecated = path.join(directory, 'deprecated');
+  if (!fs.existsSync(deprecated)) return [];
+  return fs.readdirSync(deprecated, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && CURRENT_SCHEMA_PATTERN.test(entry.name))
+    .map((entry) => entry.name)
+    .sort();
+}
+
+/**
+ * THE REFERENCE BUNDLE LOADER — the shape every service's startup loader implements.
+ *
+ * It lives here, in the contract authority's tests, because four services reimplement it in three
+ * languages and the one place they can be checked against each other is the package that defines
+ * what they are reading. It is test-only: this package ships schemas and no runtime code.
+ *
+ *     require exactly one current schema -> version from its filename -> parse -> the schema must
+ *     be able to express that version -> enumerate deprecated/ -> same four steps each -> refuse a
+ *     duplicate version -> cache { current, readable }
+ *
+ * Every fault throws. A legacy contract this bundle ADVERTISES as readable but cannot parse is a
+ * startup failure, not a feature-time surprise: a service that claims to read 1.0 and discovers at
+ * the user's first import that its 1.0 contract is corrupt has lied about its capability.
+ */
+export function loadContractBundle(directory = SCHEMA_DIR) {
+  const currentFile = currentSchemaFiles(directory);
+  if (currentFile.length !== 1)
+    throw new Error(`expected exactly one current APMap schema in ${directory}, found ${currentFile.length}`
+      + (currentFile.length ? `: ${currentFile.join(', ')}` : '')
+      + '; exactly one file is the contract, and a second is an ambiguity nothing can resolve');
+
+  const readable = new Map();
+  const current = readSchemaFile(path.join(directory, currentFile[0]));
+  readable.set(current.version, current);
+
+  for (const name of legacySchemaFiles(directory)) {
+    const legacy = readSchemaFile(path.join(directory, 'deprecated', name));
+    if (readable.has(legacy.version))
+      throw new Error(`APMap ${legacy.version} is declared twice in ${directory}; a version that `
+        + 'resolves to two contracts resolves to neither');
+    readable.set(legacy.version, legacy);
+  }
+  return { current, readable };
+}
+
+/** One schema file: parsed, version-from-filename, and checked that it can say its own name. */
+function readSchemaFile(file) {
+  const name = path.basename(file);
+  const version = CURRENT_SCHEMA_PATTERN.exec(name)[1];
+  let schema;
+  try {
+    schema = readJson(file);
+  } catch (cause) {
+    throw new Error(`the APMap schema ${file} is not valid JSON: ${cause.message}`);
+  }
+  const contract = schema?.properties?.apmap_version ?? {};
+  const accepted = contract.const ? [contract.const] : (contract.enum ?? []);
+  if (!accepted.includes(version))
+    throw new Error(`${name} is named for APMap ${version}, but its apmap_version contract `
+      + `${JSON.stringify(accepted)} cannot express it`);
+  return { version, path: file, schema };
+}
+
+/** The versions this bundle can READ, sorted. The current one is always among them. */
+export const readableVersions = (directory = SCHEMA_DIR) =>
+  [...loadContractBundle(directory).readable.keys()].sort();
 
 /** One Ajv instance per call: a compiled validator caches, and these tests compile several schemas. */
 export const compile = (schema) =>
@@ -73,8 +150,12 @@ export const vectorIndex = () => readJson(path.join(PACKAGE_ROOT, 'test-vectors'
 export const vector = (kind, file) => readJson(path.join(PACKAGE_ROOT, 'test-vectors', kind, file));
 
 /**
- * The DEPRECATED tree. Reachable from these tests by an explicit repository-local path and from
- * nowhere else — not through `exports`, not through discovery.
+ * The DEPRECATED corpus — `deprecated/1.0/`, the published 1.0 vectors and examples. Reachable by
+ * an explicit repository-local path only; it is history, not a runtime input.
+ *
+ * `deprecatedSchemaPath()` is different in kind: it names the frozen 1.0 CONTRACT, which IS a
+ * runtime input — a reader loads it to validate a 1.0 document it has been asked to open. It is
+ * outside `exports` because no writer may ever choose it, not because nothing may read it.
  */
 export const DEPRECATED_ROOT = path.join(PACKAGE_ROOT, 'deprecated');
 export const deprecatedSchemaPath = () => path.join(SCHEMA_DIR, 'deprecated', 'apmap-1.0.schema.json');

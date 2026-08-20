@@ -3,15 +3,20 @@
  *
  * These are the assertions every service's startup loader depends on being true of this package.
  * If any of them fails, four services fail to start, and they should: the alternative is a stack
- * that boots and then disagrees with itself about which format it speaks.
+ * that boots and then disagrees with itself about which formats it reads and which one it writes.
+ *
+ *     READ       current + every schema under schema/deprecated/
+ *     WRITE      the one schema directly under schema/
+ *     VALIDATE   with the schema matching the document's declared version
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import {
-  CURRENT_SCHEMA_PATTERN, PACKAGE_ROOT, SCHEMA_DIR, compile, currentSchemaFiles, currentSchemaPath,
-  currentVersion, deprecated10, deprecatedSchemaPath, loadCurrentSchema, readJson,
+  CURRENT_SCHEMA_PATTERN, DEPRECATED_SCHEMA_DIR, PACKAGE_ROOT, SCHEMA_DIR, compile,
+  currentSchemaFiles, currentSchemaPath, currentVersion, deprecated10, deprecatedSchemaPath,
+  legacySchemaFiles, loadContractBundle, loadCurrentSchema, readJson, readableVersions,
 } from './helpers.mjs';
 
 test('exactly one current schema sits directly under schema/', () => {
@@ -46,26 +51,50 @@ test('the schema agrees with its own filename', () => {
 /**
  * The current schema's enum still contains "1.0", and that is deliberate and harmless.
  *
- * It means the schema would structurally accept a 1.0-shaped document — which creates NO runtime
- * support promise, because every service refuses a deprecated version at its version gate, before
- * validation is reached. Asserted rather than left implicit, so that nobody later "fixes" the enum
- * believing it is what enforces the doctrine. It is not. The gate is.
+ * It means the current schema would structurally accept a 1.0-shaped document. That is not how a
+ * 1.0 document gets read: a reader picks the schema MATCHING the declared version, so a 1.0
+ * document is validated against the frozen 1.0 contract and never against this one. Asserted
+ * rather than left implicit so that nobody later "fixes" the enum believing it is the mechanism by
+ * which either the READ or the WRITE rule holds. It is neither. Version-matched validation is the
+ * first; one direct schema file is the second.
  */
-test('structural acceptance of a 1.0 shape is not a support promise', () => {
+test('the current schema structurally accepting a 1.0 shape is not how 1.0 is read', () => {
   const contract = loadCurrentSchema().properties.apmap_version;
   assert.ok(contract.enum.includes('1.0'));
   assert.ok(contract.enum.includes(currentVersion()));
 });
 
-test('the deprecated schema is quarantined and cannot be discovered', () => {
-  assert.ok(fs.existsSync(deprecatedSchemaPath()), 'the frozen 1.0 schema must be kept as history');
-  // It lives one level down, so the discovery scan — which reads DIRECT children only — cannot see
-  // it. This is the mechanism, not an optimisation.
-  assert.equal(path.dirname(deprecatedSchemaPath()), path.join(SCHEMA_DIR, 'deprecated'));
+test('the deprecated schema is readable legacy, and can never be the writer contract', () => {
+  assert.ok(fs.existsSync(deprecatedSchemaPath()), 'the frozen 1.0 schema is a runtime read contract');
+  // It lives one level down, so the CURRENT scan — which reads direct children only — cannot see
+  // it. That is the mechanism: depth is what separates "readable" from "writable". A reader
+  // enumerating deprecated/ finds it deliberately; a writer never can.
+  assert.equal(path.dirname(deprecatedSchemaPath()), DEPRECATED_SCHEMA_DIR);
   assert.ok(!currentSchemaFiles().includes('apmap-1.0.schema.json'));
+  assert.deepEqual(legacySchemaFiles(), ['apmap-1.0.schema.json']);
 });
 
-test('the deprecated schema is outside normal package exports', () => {
+test('the readable versions are derived from the layout, not from a maintained list', () => {
+  assert.deepEqual(readableVersions(), ['1.0', '1.1']);
+  const bundle = loadContractBundle();
+  assert.equal(bundle.current.version, currentVersion());
+  assert.equal(bundle.current.version, '1.1');
+  // The current version is always readable — a build that could write a document it could not
+  // read back would be a contract nobody could use.
+  assert.ok(bundle.readable.has(bundle.current.version));
+  // Every readable version's version came from its own filename.
+  for (const [version, entry] of bundle.readable)
+    assert.equal(CURRENT_SCHEMA_PATTERN.exec(path.basename(entry.path))[1], version);
+});
+
+test('every advertised readable contract parses and compiles', () => {
+  // A bundle that advertises 1.0 and cannot compile its 1.0 schema has lied about its capability,
+  // and the lie would surface at a user's first legacy import rather than at startup.
+  for (const [version, entry] of loadContractBundle().readable)
+    assert.doesNotThrow(() => compile(entry.schema), `APMap ${version} does not compile`);
+});
+
+test('a deprecated schema is never a writer choice', () => {
   const manifest = readJson(path.join(PACKAGE_ROOT, 'package.json'));
   const targets = Object.values(manifest.exports);
   assert.ok(!targets.some((target) => target.includes('deprecated')),
@@ -75,10 +104,14 @@ test('the deprecated schema is outside normal package exports', () => {
   assert.equal(manifest.exports['.'], `./schema/${path.basename(currentSchemaPath())}`);
 });
 
-test('the package ships the current surface and not the deprecated one', () => {
+test('the package ships the whole contract bundle, current and legacy', () => {
   const manifest = readJson(path.join(PACKAGE_ROOT, 'package.json'));
-  assert.ok(!manifest.files.includes('deprecated'));
+  // `schema` carries schema/deprecated/ with it, which is the point: a runtime reader consumes the
+  // contract DIRECTORY, so a published tarball missing the legacy contract would be a build that
+  // cannot open the maps its own users already have.
   assert.deepEqual(manifest.files.filter((entry) => entry.startsWith('schema')), ['schema']);
+  // The historical CORPUS is a different thing and stays unpublished — it is evidence, not input.
+  assert.ok(!manifest.files.includes('deprecated'));
 });
 
 test('the deprecated 1.0 corpus is present, frozen, and documented', () => {

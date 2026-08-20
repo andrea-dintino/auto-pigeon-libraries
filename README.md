@@ -40,7 +40,7 @@ which names the repositories that consume it and validates against
 
 | package | what it is |
 | --- | --- |
-| [`ts/apmap-schema`](ts/apmap-schema/) | the canonical APMap contract. **1.1 = current runtime contract; 1.0 = deprecated historical contract.** Exactly one current schema, its normative `SEMANTICS.md`, and its conformance vectors. Contract material only, no runtime code. |
+| [`ts/apmap-schema`](ts/apmap-schema/) | the canonical APMap contract. **1.1 = current READ + WRITE contract; 1.0 = deprecated legacy READ contract.** Exactly one current schema, the legacy contracts beside it under `schema/deprecated/`, the normative `SEMANTICS.md`, and the conformance vectors. Contract material only, no runtime code. |
 
 The TypeScript APMap reader/writer/validator is next; it will consume
 `apmap-schema` rather than carry its own copy.
@@ -63,10 +63,22 @@ including the whole published contract, current and deprecated.
 
 ## The APMap contract, in one sentence
 
-`ts/apmap-schema/schema/` holds **exactly one** `apmap-*.schema.json`; its filename carries the
-current version; every service derives that version by reading the directory at startup and refuses
-any other version before validating anything. Deprecated schemas live under `schema/deprecated/`,
-are outside `exports`, and are never loaded by product code.
+`ts/apmap-schema/schema/` holds **exactly one** `apmap-*.schema.json` — the current contract, the
+only format anything writes — and `schema/deprecated/` holds the supported legacy READ contracts
+beside it; every service loads the whole directory at startup, derives each version from its
+filename, validates a document against the schema matching what that document declares, and refuses
+a version the bundle does not hold.
+
+```text
+READ        current + supported legacy   (today: 1.0 and 1.1)
+WRITE       current only                 (today: 1.1)
+VALIDATE    with the schema matching the document
+WIRE/COLLAB current only
+```
+
+Depth is the mechanism: current discovery reads direct children only, so a deprecated schema can
+never become the writer's contract, and `exports` offers no per-version subpath for a producer to
+reach for.
 
 ## The workspace manifest
 
