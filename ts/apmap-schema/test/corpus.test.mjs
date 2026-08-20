@@ -15,7 +15,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import { apmapFiles, compile, currentVersion, describeErrors, deprecatedSchemaPath, loadCurrentSchema, mapperRoot, readJson } from './helpers.mjs';
+import { apmapFiles, compile, currentVersion, describeErrors, loadCurrentSchema, mapperRoot, readJson } from './helpers.mjs';
 
 const MAPPER_ROOT = mapperRoot();
 const skip = MAPPER_ROOT ? false : 'no $MAPPER_ROOT corpus reachable; set MAPPER_ROOT to run the real-document tests';
@@ -29,19 +29,26 @@ const CORPORA = [
 ];
 
 /**
- * The temporary `$MAPPER_ROOT` mirror, byte-compared against the quarantined copy.
+ * THE `$MAPPER_ROOT` MIRROR IS GONE, AND THIS ASSERTS THAT IT STAYS GONE.
  *
- * This repository is the authority; the mirror is what PREPROD-01C deletes. Until then a drift
- * would mean somebody edited a frozen contract. Bytes only — nothing compiles or validates against
- * the deprecated schema, here or anywhere.
+ * `$MAPPER_ROOT/formats/apmap/` held a copy of the 1.0 schema, its vectors and its examples. A
+ * test here byte-compared the two and told whoever broke the tie to "update the mirror" — which
+ * was the right check while a second copy existed and the wrong thing to keep once it did not.
+ * PREPROD-01C removed it: the contract is packaged into each Docker image from this repository,
+ * so the data root is not an APMap authority in any deployment any more.
+ *
+ * The inverted assertion is the useful one now. A mirror reappearing is a second source of truth
+ * growing back, and the failure it causes — two contracts that agree until the day they do not —
+ * is the one this whole line of work exists to prevent. Everything the mirror carried is here:
+ * the schema at `schema/deprecated/`, the vectors and examples under `deprecated/1.0/`, and the
+ * published specification as `deprecated/1.0/PUBLISHED-README.md`.
  */
-const MIRROR = MAPPER_ROOT ? path.join(MAPPER_ROOT, 'formats/apmap/1.0/apmap.schema.json') : null;
-const skipMirror = MIRROR && fs.existsSync(MIRROR)
-  ? false : 'the temporary $MAPPER_ROOT/formats/apmap/1.0 mirror is gone — expected after PREPROD-01C';
-
-test('the temporary legacy mirror still matches the quarantined 1.0 schema', { skip: skipMirror }, () => {
-  assert.deepEqual(fs.readFileSync(MIRROR), fs.readFileSync(deprecatedSchemaPath()),
-    'the mirror has drifted from this repository, which is the authority. Update the mirror.');
+test('the retired $MAPPER_ROOT mirror has not grown back', { skip }, () => {
+  const mirror = path.join(MAPPER_ROOT, 'formats/apmap');
+  assert.ok(!fs.existsSync(mirror),
+    `${mirror} exists again. It was removed by PREPROD-01C because a second copy of the contract `
+    + 'is a second source of truth; this repository is the authority and Docker images package it '
+    + 'from here. Delete the mirror rather than re-syncing it.');
 });
 
 for (const [label, relative] of CORPORA) {
