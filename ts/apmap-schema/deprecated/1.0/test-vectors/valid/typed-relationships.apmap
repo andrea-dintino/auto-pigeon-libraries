@@ -1,0 +1,727 @@
+{
+  "$schema": "https://auto-pigeon.org/schemas/apmap/1.0/apmap.schema.json",
+  "apmap_version": "1.0",
+  "document_id": "vector08typedrelationships",
+  "revision": 0,
+  "role": "full_map",
+  "game": "quake1",
+  "map_dialect": "quake_standard",
+  "id_policy": "minted",
+  "frame": {
+    "space": "source_world",
+    "units": "quake_unit",
+    "coordinate_system": {
+      "handedness": "right",
+      "up_axis": "z"
+    },
+    "to_source": {
+      "type": "identity"
+    }
+  },
+  "entities": [
+    {
+      "entity_id": "ent_vector0800000000",
+      "content": [
+        {
+          "kind": "property",
+          "key": "classname",
+          "value": "worldspawn"
+        },
+        {
+          "kind": "brush",
+          "brush_id": "brs_vect000000000000",
+          "faces": [
+            {
+              "face_id": "fac_vect000000000000",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_vect000000000001",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_vect000000000002",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_vect000000000003",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_vect000000000004",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_vect000000000005",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "entity_id": "ent_vector0800000001",
+      "content": [
+        {
+          "kind": "property",
+          "key": "classname",
+          "value": "trigger_once"
+        },
+        {
+          "kind": "property",
+          "key": "target",
+          "value": "t1"
+        },
+        {
+          "kind": "brush",
+          "brush_id": "brs_trig000000000000",
+          "faces": [
+            {
+              "face_id": "fac_trig000000000000",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_trig000000000001",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_trig000000000002",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_trig000000000003",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_trig000000000004",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_trig000000000005",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "entity_id": "ent_vector0800000002",
+      "content": [
+        {
+          "kind": "property",
+          "key": "classname",
+          "value": "func_door"
+        },
+        {
+          "kind": "property",
+          "key": "targetname",
+          "value": "t1"
+        },
+        {
+          "kind": "brush",
+          "brush_id": "brs_door000000000000",
+          "faces": [
+            {
+              "face_id": "fac_door000000000000",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_door000000000001",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_door000000000002",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_door000000000003",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_door000000000004",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_door000000000005",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "type": "activation_source",
+      "from": "ent_vector0800000001",
+      "to": "ent_vector0800000002",
+      "payload": {
+        "via": "target",
+        "key": "t1"
+      }
+    },
+    {
+      "type": "entity_target",
+      "from": "ent_vector0800000001",
+      "to": "ent_vector0800000002"
+    }
+  ]
+}

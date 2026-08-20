@@ -1,0 +1,50 @@
+{
+  "apmap_version": "1.0",
+  "expectation": "every listed document must pass schema validation and every semantic rule",
+  "vectors": [
+    {
+      "file": "minimal-full-map.apmap",
+      "covers": "Smallest legal full map: worldspawn, one convex cube, classic projection."
+    },
+    {
+      "file": "prefab-core-classic.apmap",
+      "covers": "The real e1m4 opposed_pair func_door package, prefab-local frame with a recorded translation back to source world."
+    },
+    {
+      "file": "valve220-projection.apmap",
+      "covers": "Valve 220 face syntax: explicit u_axis and v_axis alongside rotation and scale."
+    },
+    {
+      "file": "quake2-face-tail.apmap",
+      "covers": "Quake 2-style trailing numeric face values preserved verbatim in tail."
+    },
+    {
+      "file": "repeated-entity-keys.apmap",
+      "covers": "A repeated key and a property that follows a brush: ordered content round-trips both."
+    },
+    {
+      "file": "cropped-context-synthetic-faces.apmap",
+      "covers": "Cropped context: a synthetic cap face carrying synthetic true and synthetic_reason context_crop."
+    },
+    {
+      "file": "authored-object-ids.apmap",
+      "covers": "Objects created by a user operation: ids derived from document_id, operation_id and ordinal, so journal replay reproduces them."
+    },
+    {
+      "file": "typed-relationships.apmap",
+      "covers": "activation_source and entity_target edges referencing stable entity ids."
+    },
+    {
+      "file": "point-entities-only.apmap",
+      "covers": "Brushless point entities: an entity may legally carry no brush at all."
+    },
+    {
+      "file": "package-derived-ids.apmap",
+      "covers": "Package-scoped identity: ids derived from package_id, document role and the object path inside the document. This is the policy AIM's prefab export uses."
+    },
+    {
+      "file": "namespaced-extensions.apmap",
+      "covers": "Namespaced extensions at document and entity scope; unknown vendor data never weakens the core schema."
+    }
+  ]
+}

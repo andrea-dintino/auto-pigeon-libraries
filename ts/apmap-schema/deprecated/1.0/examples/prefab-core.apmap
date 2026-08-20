@@ -1,0 +1,666 @@
+{
+  "$schema": "https://auto-pigeon.org/schemas/apmap/1.0/apmap.schema.json",
+  "apmap_version": "1.0",
+  "document_id": "01jqapmapprefabcoredoor01",
+  "revision": 0,
+  "role": "prefab_core",
+  "game": "quake1",
+  "map_dialect": "quake_standard",
+  "id_policy": "derived",
+  "frame": {
+    "space": "prefab_local",
+    "units": "quake_unit",
+    "coordinate_system": {
+      "handedness": "right",
+      "up_axis": "z"
+    },
+    "to_source": {
+      "type": "translation",
+      "translation": [
+        1224,
+        999,
+        1384
+      ]
+    }
+  },
+  "provenance": {
+    "producer": "ai-mapcopilot",
+    "producer_version": "1.0",
+    "pipeline": [
+      "select_source_entities",
+      "preserve_rigid_brush_group",
+      "canonicalize_rigid",
+      "verify_source_equivalence"
+    ],
+    "source": {
+      "map_name": "e1m4",
+      "map_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+      "corpus": "quake1"
+    },
+    "package": {
+      "package_id": "multi-brush-rigid-e1m4-e30-e31",
+      "role_file": "prefab.map"
+    }
+  },
+  "entities": [
+    {
+      "entity_id": "ent_53522277c3d1c8ad",
+      "derived_from": {
+        "kind": "authored",
+        "document_id": "01jqapmapprefabcoredoor01",
+        "operation_id": "extract-worldspawn",
+        "ordinal": 0
+      },
+      "content": [
+        {
+          "kind": "property",
+          "key": "classname",
+          "value": "worldspawn"
+        },
+        {
+          "kind": "property",
+          "key": "wad",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "entity_id": "ent_432a6b642793e26b",
+      "derived_from": {
+        "kind": "source_map",
+        "source_map": "e1m4",
+        "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+        "source_path": "e30",
+        "source_entity_index": 30
+      },
+      "content": [
+        {
+          "kind": "property",
+          "key": "classname",
+          "value": "func_door"
+        },
+        {
+          "kind": "property",
+          "key": "angle",
+          "value": "180"
+        },
+        {
+          "kind": "property",
+          "key": "wait",
+          "value": "-1"
+        },
+        {
+          "kind": "property",
+          "key": "sounds",
+          "value": "1"
+        },
+        {
+          "kind": "property",
+          "key": "targetname",
+          "value": "t1"
+        },
+        {
+          "kind": "brush",
+          "brush_id": "brs_d48986ed564f5da6",
+          "derived_from": {
+            "kind": "source_map",
+            "source_map": "e1m4",
+            "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+            "source_path": "e30.b0"
+          },
+          "faces": [
+            {
+              "face_id": "fac_a51f50c7f68690f5",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e30.b0.f0"
+              },
+              "plane": {
+                "points": [
+                  [
+                    -112,
+                    9,
+                    192
+                  ],
+                  [
+                    -112,
+                    -7,
+                    192
+                  ],
+                  [
+                    -112,
+                    -7,
+                    176
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  999,
+                  -1384
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_a81548424be315f3",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e30.b0.f1"
+              },
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    7,
+                    192
+                  ],
+                  [
+                    -112,
+                    7,
+                    192
+                  ],
+                  [
+                    -112,
+                    7,
+                    176
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  1224,
+                  -1384
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_478b1cfa5342572a",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e30.b0.f2"
+              },
+              "plane": {
+                "points": [
+                  [
+                    -8,
+                    -7,
+                    192
+                  ],
+                  [
+                    -8,
+                    9,
+                    192
+                  ],
+                  [
+                    -8,
+                    9,
+                    176
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  999,
+                  -1384
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_babb6994075ffcb8",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e30.b0.f3"
+              },
+              "plane": {
+                "points": [
+                  [
+                    -112,
+                    -7,
+                    192
+                  ],
+                  [
+                    0,
+                    -7,
+                    192
+                  ],
+                  [
+                    0,
+                    -7,
+                    176
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  1224,
+                  -1384
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_57ea0f611bb6ec69",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e30.b0.f4"
+              },
+              "plane": {
+                "points": [
+                  [
+                    -112,
+                    -7,
+                    192
+                  ],
+                  [
+                    -112,
+                    9,
+                    192
+                  ],
+                  [
+                    0,
+                    9,
+                    192
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  1224,
+                  -999
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_8a2cdf532973ba76",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e30.b0.f5"
+              },
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    9,
+                    0
+                  ],
+                  [
+                    -112,
+                    9,
+                    0
+                  ],
+                  [
+                    -112,
+                    -7,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  1224,
+                  -999
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "entity_id": "ent_8f8671c6aa12abf4",
+      "derived_from": {
+        "kind": "source_map",
+        "source_map": "e1m4",
+        "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+        "source_path": "e31",
+        "source_entity_index": 31
+      },
+      "content": [
+        {
+          "kind": "property",
+          "key": "classname",
+          "value": "func_door"
+        },
+        {
+          "kind": "property",
+          "key": "angle",
+          "value": "0"
+        },
+        {
+          "kind": "property",
+          "key": "wait",
+          "value": "-1"
+        },
+        {
+          "kind": "brush",
+          "brush_id": "brs_5afdb40b62eb9f11",
+          "derived_from": {
+            "kind": "source_map",
+            "source_map": "e1m4",
+            "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+            "source_path": "e31.b0"
+          },
+          "faces": [
+            {
+              "face_id": "fac_9fd1a78853b86e90",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e31.b0.f0"
+              },
+              "plane": {
+                "points": [
+                  [
+                    -8,
+                    9,
+                    192
+                  ],
+                  [
+                    -8,
+                    -7,
+                    192
+                  ],
+                  [
+                    -8,
+                    -7,
+                    176
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  999,
+                  -1384
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_f5a0d49fcca2aff2",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e31.b0.f1"
+              },
+              "plane": {
+                "points": [
+                  [
+                    112,
+                    7,
+                    192
+                  ],
+                  [
+                    0,
+                    7,
+                    192
+                  ],
+                  [
+                    0,
+                    7,
+                    176
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  1224,
+                  -1384
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_43eb39e5e775e1bb",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e31.b0.f2"
+              },
+              "plane": {
+                "points": [
+                  [
+                    112,
+                    -7,
+                    192
+                  ],
+                  [
+                    112,
+                    9,
+                    192
+                  ],
+                  [
+                    112,
+                    9,
+                    176
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  999,
+                  -1384
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_84ef0e55a5589536",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e31.b0.f3"
+              },
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    -7,
+                    192
+                  ],
+                  [
+                    112,
+                    -7,
+                    192
+                  ],
+                  [
+                    112,
+                    -7,
+                    176
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  1224,
+                  -1384
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_d2d7f0a845d70a54",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e31.b0.f4"
+              },
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    -7,
+                    192
+                  ],
+                  [
+                    0,
+                    9,
+                    192
+                  ],
+                  [
+                    112,
+                    9,
+                    192
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  1224,
+                  -999
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_4d84db7221c2afe7",
+              "derived_from": {
+                "kind": "source_map",
+                "source_map": "e1m4",
+                "source_sha256": "d26bec2c62bf2840919b39e7e7b96939d306df0c2d88d1282ba581bd1ed40c4d",
+                "source_path": "e31.b0.f5"
+              },
+              "plane": {
+                "points": [
+                  [
+                    112,
+                    9,
+                    0
+                  ],
+                  [
+                    0,
+                    9,
+                    0
+                  ],
+                  [
+                    0,
+                    -7,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  1224,
+                  -999
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "type": "assembly_member",
+      "from": "ent_432a6b642793e26b",
+      "to": "ent_8f8671c6aa12abf4",
+      "payload": {
+        "kind": "opposed_pair",
+        "assembly_id": "e1m4:e30+e31"
+      }
+    }
+  ],
+  "extensions": {
+    "ai-mapcopilot.extraction": {
+      "assembly_kind": "opposed_pair",
+      "geometry_policy": "rigid_source_copy",
+      "texture_policy": "authored_faces_verbatim"
+    }
+  }
+}

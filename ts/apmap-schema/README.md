@@ -7,27 +7,55 @@ Auto-Pigeon, and the collaboration service.
 validator are a separate package.
 
 ```text
-schema/apmap-1.1.schema.json   the current contract; validates 1.0 and 1.1 documents
-schema/apmap-1.0.schema.json   1.0, frozen, byte-identical to what 1.0 documents were validated against
-test-vectors/                  documents that must be accepted and documents that must be rejected
+1.1 = current runtime contract
+1.0 = deprecated historical contract
 ```
 
-## The compatibility promise
+```text
+schema/apmap-1.1.schema.json          THE current contract — exactly one file lives here
+schema/deprecated/apmap-1.0.schema.json   frozen history; not exported, not discoverable
+SEMANTICS.md                          the normative specification, SCH-* and SEM-* rules
+test-vectors/                         conformance vectors for the CURRENT contract
+deprecated/1.0/                       the published 1.0 corpus, examples, and the rejection fixture
+workspace/ (repository root)          the canonical workspace manifest
+```
 
-**Every valid APMap 1.0 document is a valid APMap 1.1 document.** 1.1 is strictly additive: it adds
-one `derived_from` kind and one optional brush member, and changes nothing that 1.0 already defined.
-A producer that has never heard of 1.1 keeps working, and a 1.1 consumer reads its output.
+## The runtime doctrine
 
-This is not asserted and left there. `test/schema.test.mjs` walks both schema documents and fails if
-1.1 changed or removed anything 1.0 defined, and `test/corpus.test.mjs` validates the real corpus
-under `$MAPPER_ROOT` — the published examples and vectors, the clean full-map corpus, and the AIM
-codec exports — against 1.1. Sixty-three real 1.0 documents, written before 1.1 existed, are the
-evidence.
+```text
+READ       current only
+WRITE      current only
+VALIDATE   current only
+```
 
-The frozen `apmap-1.0.schema.json` stays for converters and archived documents, which need a fixed
-reference rather than a moving one. A test asserts it is still byte-identical to the published
-`$MAPPER_ROOT/formats/apmap/1.0/apmap.schema.json`, and another asserts it still refuses a document
-declaring 1.1 — a frozen copy that quietly thawed would be worse than no copy.
+A document declaring a deprecated version is **refused by every service's version gate, before
+schema validation is reached**. There is no compatibility matrix, no version chooser, and no
+fallback: `schema/` holds exactly one `apmap-*.schema.json`, its filename carries the current
+version, and every service derives that version by reading the directory at startup. Promoting 1.2
+is one file rename.
+
+The current schema's `apmap_version` enum still contains `1.0`, so it would *structurally* accept a
+1.0-shaped document. **That creates no support promise.** The gate runs first, and the gate is what
+the doctrine is enforced by — a test in `contract-integrity.test.mjs` says so, precisely so that
+nobody later "fixes" the enum believing it is the mechanism.
+
+## What is deprecated, and what that means
+
+`schema/deprecated/` and `deprecated/1.0/` exist for historical evidence, this repository's own
+history tests, and future explicit migration tooling. No product code loads them; they are outside
+`exports` by construction, and discovery reads direct children of `schema/` only, so a deprecated
+schema cannot be found even by accident. `deprecated/1.0/README.md` is the full account.
+
+## How 1.1 relates to 1.0 — history, not a promise
+
+1.1 was built **additively** from 1.0: it adds one `derived_from` kind (`operation`) and one
+optional brush member (`broken`), and changes nothing 1.0 already defined. `test/schema.test.mjs`
+walks both documents and fails if that stops being true.
+
+That matters for exactly one reason: it means a future migration can rewrite a document's declared
+version and nothing else. `test/deprecated-history.test.mjs` proves it over the whole published 1.0
+corpus, and `test/corpus.test.mjs` proves it over the generated corpora when they are mounted. It
+does **not** mean a 1.0 document is accepted anywhere — it is refused at the gate.
 
 ## What 1.1 adds
 

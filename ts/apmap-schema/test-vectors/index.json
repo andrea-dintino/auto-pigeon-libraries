@@ -1,6 +1,6 @@
 {
   "apmap_version": "1.1",
-  "description": "Conformance vectors for APMap 1.1, in the shape the published 1.0 vectors use at $MAPPER_ROOT/formats/apmap/1.0/test-vectors/. Every valid vector must be accepted by apmap-1.1.schema.json; every invalid one must be rejected, and rejected for the reason recorded here rather than incidentally.",
+  "description": "Conformance vectors for the CURRENT APMap contract. Every valid vector must be accepted by the one schema under schema/; every invalid one must be rejected, and rejected for the reason recorded here rather than incidentally. A document declaring a deprecated version is not a vector here at all \u2014 it is refused by the runtime version gate before validation is reached, and deprecated/1.0/one-zero-document.apmap is the fixture for that.",
   "valid": [
     {
       "file": "operation-derived-brush.apmap",
@@ -8,7 +8,7 @@
     },
     {
       "file": "operation-derived-minimal.apmap",
-      "exercises": "derived_from kind 'operation' carrying nothing but kind and operation_id — the documented minimum."
+      "exercises": "derived_from kind 'operation' carrying nothing but kind and operation_id \u2014 the documented minimum."
     },
     {
       "file": "operation-derived-entity-and-face.apmap",
@@ -25,10 +25,6 @@
     {
       "file": "no-1-1-features.apmap",
       "exercises": "a document declaring 1.1 and using neither addition. 1.1 requires nothing new of a producer."
-    },
-    {
-      "file": "one-zero-document.apmap",
-      "exercises": "apmap_version 1.0, byte-identical in shape to the 1.1 vector beside it. The compatibility promise, in one file: a 1.0 document is a valid 1.1 document."
     }
   ],
   "invalid": [

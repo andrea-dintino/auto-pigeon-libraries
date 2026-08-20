@@ -1,0 +1,312 @@
+{
+  "$schema": "https://auto-pigeon.org/schemas/apmap/1.0/apmap.schema.json",
+  "apmap_version": "1.0",
+  "document_id": "vector11packagederivedids",
+  "revision": 0,
+  "role": "prefab_core",
+  "game": "quake1",
+  "map_dialect": "quake_standard",
+  "id_policy": "derived",
+  "frame": {
+    "space": "prefab_local",
+    "units": "quake_unit",
+    "coordinate_system": {
+      "handedness": "right",
+      "up_axis": "z"
+    },
+    "to_source": {
+      "type": "translation",
+      "translation": [
+        1224,
+        999,
+        1384
+      ]
+    }
+  },
+  "provenance": {
+    "producer": "ai-mapcopilot",
+    "producer_version": "1.0",
+    "package": {
+      "package_id": "multi-brush-rigid-e1m4-e30-e31",
+      "role_file": "prefab.map"
+    }
+  },
+  "entities": [
+    {
+      "entity_id": "ent_4213fe5be4caac4d",
+      "derived_from": {
+        "kind": "package",
+        "package_id": "multi-brush-rigid-e1m4-e30-e31",
+        "role": "prefab_core",
+        "object_path": "e0"
+      },
+      "content": [
+        {
+          "kind": "property",
+          "key": "classname",
+          "value": "func_door"
+        },
+        {
+          "kind": "brush",
+          "brush_id": "brs_53f14e9dda8369e0",
+          "derived_from": {
+            "kind": "package",
+            "package_id": "multi-brush-rigid-e1m4-e30-e31",
+            "role": "prefab_core",
+            "object_path": "e0.b0",
+            "source_map": "e1m4",
+            "source_entity_index": 30
+          },
+          "faces": [
+            {
+              "face_id": "fac_d3cd46d48191c7fa",
+              "derived_from": {
+                "kind": "package",
+                "package_id": "multi-brush-rigid-e1m4-e30-e31",
+                "role": "prefab_core",
+                "object_path": "e0.b0.f0"
+              },
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_ab63cf77e2c84aaa",
+              "derived_from": {
+                "kind": "package",
+                "package_id": "multi-brush-rigid-e1m4-e30-e31",
+                "role": "prefab_core",
+                "object_path": "e0.b0.f1"
+              },
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_f0b6e6c8ca3d7916",
+              "derived_from": {
+                "kind": "package",
+                "package_id": "multi-brush-rigid-e1m4-e30-e31",
+                "role": "prefab_core",
+                "object_path": "e0.b0.f2"
+              },
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_7dadb7955b539fd6",
+              "derived_from": {
+                "kind": "package",
+                "package_id": "multi-brush-rigid-e1m4-e30-e31",
+                "role": "prefab_core",
+                "object_path": "e0.b0.f3"
+              },
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_d250b9e59980b5d4",
+              "derived_from": {
+                "kind": "package",
+                "package_id": "multi-brush-rigid-e1m4-e30-e31",
+                "role": "prefab_core",
+                "object_path": "e0.b0.f4"
+              },
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_480d34d85daddae2",
+              "derived_from": {
+                "kind": "package",
+                "package_id": "multi-brush-rigid-e1m4-e30-e31",
+                "role": "prefab_core",
+                "object_path": "e0.b0.f5"
+              },
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,75 +1,68 @@
 /**
- * APMap 1.1 against real documents.
+ * The current schema against the real corpora — as MIGRATION EVIDENCE, not as a support promise.
  *
- * The compatibility promise is only worth what it survives, and what it has to survive is the
- * documents that already exist — not the ones written to demonstrate it. These read the corpus under
- * `$MAPPER_ROOT`, which is not part of this repository: from a bare public clone they skip, saying
- * so, and the hand-built vectors in `schema.test.mjs` still run.
+ * Every document in these corpora declares `1.0`, and every service now REFUSES a 1.0 document at
+ * its version gate. So what these tests establish is not that the corpora still work — they do not,
+ * and are not meant to. It is that the current schema is structurally capable of expressing every
+ * real document that exists, which is what makes a future mechanical migration (PREPROD-01C+) a
+ * rewrite of one header field rather than a lossy conversion. If one of these ever fails, migration
+ * has a real problem and somebody should know before writing the tool.
+ *
+ * The corpora live under `$MAPPER_ROOT` and are not part of this repository. Each skips by name when
+ * it is not mounted — `AGENTS.md` §4D: derived output may never gate repository correctness.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import { apmapFiles, compile, describeErrors, loadSchema, mapperRoot, readJson, schemaPath } from './helpers.mjs';
+import { apmapFiles, compile, currentVersion, describeErrors, deprecatedSchemaPath, loadCurrentSchema, mapperRoot, readJson } from './helpers.mjs';
 
 const MAPPER_ROOT = mapperRoot();
 const skip = MAPPER_ROOT ? false : 'no $MAPPER_ROOT corpus reachable; set MAPPER_ROOT to run the real-document tests';
 
-const validate11 = compile(loadSchema('1.1'));
+const validate11 = compile(loadCurrentSchema());
 
 /** The corpora, widest first. Each is APMap 1.0 written by a producer that has never heard of 1.1. */
 const CORPORA = [
-  ['published examples', 'formats/apmap/1.0/examples'],
-  ['published valid vectors', 'formats/apmap/1.0/test-vectors/valid'],
   ['clean full-map corpus', 'LLM/generated/apmap/clean-corpus'],
   ['AIM codec exports', 'LLM/generated/apmap/aim-codec'],
 ];
 
-test('the frozen 1.0 copy is byte-identical to the published 1.0 schema', { skip }, () => {
-  const published = fs.readFileSync(path.join(MAPPER_ROOT, 'formats/apmap/1.0/apmap.schema.json'));
-  assert.deepEqual(fs.readFileSync(schemaPath('1.0')), published,
-    'the frozen copy has drifted from $MAPPER_ROOT/formats/apmap/1.0/apmap.schema.json');
+/**
+ * The temporary `$MAPPER_ROOT` mirror, byte-compared against the quarantined copy.
+ *
+ * This repository is the authority; the mirror is what PREPROD-01C deletes. Until then a drift
+ * would mean somebody edited a frozen contract. Bytes only — nothing compiles or validates against
+ * the deprecated schema, here or anywhere.
+ */
+const MIRROR = MAPPER_ROOT ? path.join(MAPPER_ROOT, 'formats/apmap/1.0/apmap.schema.json') : null;
+const skipMirror = MIRROR && fs.existsSync(MIRROR)
+  ? false : 'the temporary $MAPPER_ROOT/formats/apmap/1.0 mirror is gone — expected after PREPROD-01C';
+
+test('the temporary legacy mirror still matches the quarantined 1.0 schema', { skip: skipMirror }, () => {
+  assert.deepEqual(fs.readFileSync(MIRROR), fs.readFileSync(deprecatedSchemaPath()),
+    'the mirror has drifted from this repository, which is the authority. Update the mirror.');
 });
 
 for (const [label, relative] of CORPORA) {
-  test(`1.1 accepts every document in the ${label}`, { skip }, (t) => {
+  const present = MAPPER_ROOT ? fs.existsSync(path.join(MAPPER_ROOT, relative)) : false;
+  const skipCorpus = skip || (present ? false : `${relative} is not mounted in this data root`);
+  test(`the current schema can express every document in the ${label}`, { skip: skipCorpus }, (t) => {
     const files = apmapFiles(path.join(MAPPER_ROOT, relative));
-    assert.ok(files.length > 0, `${relative} holds no .apmap documents`);
+    assert.ok(files.length > 0, `${relative} is mounted but holds no .apmap documents`);
     const rejected = [];
     for (const file of files) {
       const document = readJson(file);
       assert.equal(document.apmap_version, '1.0', `${file} is not a 1.0 document`);
       if (!validate11(document)) rejected.push(`${path.basename(file)}:\n  ${describeErrors(validate11.errors)}`);
     }
-    assert.deepEqual(rejected, [], `1.1 rejected real 1.0 documents:\n${rejected.join('\n')}`);
+    assert.deepEqual(rejected, [],
+      `the current schema cannot express real documents, so migration to ${currentVersion()} is not mechanical:\n${rejected.join('\n')}`);
     t.diagnostic(`${files.length} documents accepted from ${relative}`);
   });
 }
 
 /**
- * The published 1.0 rejection vectors, still rejected — with one deliberate exception.
- * `apmap-version-wrong.apmap` is a 1.0 vector whose whole fault is declaring "1.1", so 1.1 accepting
- * it is the intended consequence of the version being added, not a regression. Saying which one, and
- * why, is the point of the test: a silent exception list is how a real regression hides.
+ * The published 1.0 rejection vectors are checked in `deprecated-history.test.mjs`, against the
+ * corpus now inside this repository rather than against `$MAPPER_ROOT`.
  */
-test('1.1 still rejects the published 1.0 SCH-* vectors', { skip }, (t) => {
-  const directory = path.join(MAPPER_ROOT, 'formats/apmap/1.0/test-vectors/invalid');
-  const index = readJson(path.join(directory, 'index.json'));
-  const VERSION_VECTOR = 'apmap-version-wrong.apmap';
-  const unexpected = [];
-  let checked = 0;
-  for (const entry of index.vectors) {
-    if (!entry.rule.startsWith('SCH-')) continue;   // SEM-* rules are not expressible in JSON Schema.
-    const document = readJson(path.join(directory, entry.file));
-    const accepted = validate11(document);
-    if (entry.file === VERSION_VECTOR) {
-      assert.equal(document.apmap_version, '1.1');
-      assert.ok(accepted, `${VERSION_VECTOR} declares 1.1 and must now be accepted by the 1.1 schema`);
-      continue;
-    }
-    checked += 1;
-    if (accepted) unexpected.push(`${entry.file} (${entry.rule}: ${entry.violation})`);
-  }
-  assert.deepEqual(unexpected, [], `1.1 accepted documents 1.0 rejected:\n  ${unexpected.join('\n  ')}`);
-  t.diagnostic(`${checked} SCH-* vectors still rejected; ${VERSION_VECTOR} accepted by design`);
-});

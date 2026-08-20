@@ -8,11 +8,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  compile, compileDef, describeErrors, loadSchema, resolvePointer, vector, vectorIndex,
+  compile, compileDef, currentVersion, describeErrors, loadCurrentSchema, readJson,
+  deprecatedSchemaPath, resolvePointer, vector, vectorIndex,
 } from './helpers.mjs';
 
-const schema10 = loadSchema('1.0');
-const schema11 = loadSchema('1.1');
+const schema11 = loadCurrentSchema();
+/**
+ * The frozen 1.0 schema, read by an explicit repository-local path — the only way it is reachable.
+ * Used ONLY by the history test at the bottom of this file, which asserts it has not thawed.
+ */
+const schema10 = readJson(deprecatedSchemaPath());
 const index = vectorIndex();
 
 test('both schema documents compile as JSON Schema 2020-12', () => {
@@ -22,18 +27,25 @@ test('both schema documents compile as JSON Schema 2020-12', () => {
   assert.doesNotThrow(() => compile(schema11));
 });
 
-test('1.1 declares its own $id and accepts both versions', () => {
-  assert.equal(schema11.$id, 'https://auto-pigeon.org/schemas/apmap/1.1/apmap.schema.json');
-  assert.deepEqual(schema11.properties.apmap_version.enum, ['1.0', '1.1']);
-  assert.equal(schema10.properties.apmap_version.const, '1.0', 'the frozen 1.0 copy must stay pinned to 1.0');
+test('the current schema declares its own $id', () => {
+  assert.equal(schema11.$id, `https://auto-pigeon.org/schemas/apmap/${currentVersion()}/apmap.schema.json`);
+});
+
+test('the frozen 1.0 schema is still pinned to 1.0', () => {
+  // History only. If this ever changes, the frozen copy has been edited and the record of what 1.0
+  // actually said is gone.
+  assert.equal(schema10.properties.apmap_version.const, '1.0');
 });
 
 /**
- * The compatibility promise as a structural fact rather than an assertion in a README: 1.1 is 1.0
- * with things added. Every difference between the two documents is either an addition, or one of
- * the four places where a version of a schema necessarily differs from another version of it.
+ * HISTORY, not a support promise.
+ *
+ * This records that the current schema was built additively from the frozen one — which is why a
+ * future migration tool can be mechanical rather than lossy. It is emphatically NOT a statement
+ * that a 1.0 document is accepted at runtime: it is refused at the version gate, before validation.
+ * The test reads the deprecated schema by an explicit path for exactly that reason.
  */
-test('1.1 differs from 1.0 only by additions and its own identity', () => {
+test('the current schema differs from the frozen one only by additions', () => {
   const ALLOWED = new Set(['/$id', '/title', '/description', '/properties/apmap_version']);
   const changes = [];
   const walk = (before, after, path) => {
@@ -90,18 +102,17 @@ test('every valid vector is accepted by 1.1', (t) => {
   }
 });
 
-test('a 1.0 vector is valid under both the frozen 1.0 schema and 1.1', () => {
-  const document = vector('valid', 'one-zero-document.apmap');
-  assert.equal(document.apmap_version, '1.0');
-  const validate10 = compile(schema10);
-  assert.ok(validate10(document), `the frozen 1.0 schema rejected it:\n  ${describeErrors(validate10.errors)}`);
-  assert.ok(validate11(document), `1.1 rejected it:\n  ${describeErrors(validate11.errors)}`);
-});
-
-test('the frozen 1.0 schema still refuses a 1.1 document', () => {
+test('the frozen 1.0 schema still refuses a current document', () => {
   // If this ever passes, the frozen copy has been edited and old documents lost their fixed reference.
   const validate10 = compile(schema10);
   assert.equal(validate10(vector('valid', 'broken-brush.apmap')), false);
+});
+
+test('every current vector declares the current version', () => {
+  // The set is current-only now: a document declaring a deprecated version is not a vector here,
+  // it is a rejection fixture under deprecated/.
+  for (const entry of index.valid)
+    assert.equal(vector('valid', entry.file).apmap_version, currentVersion(), entry.file);
 });
 
 test('every invalid vector is rejected by 1.1', () => {

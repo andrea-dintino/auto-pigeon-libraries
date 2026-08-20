@@ -28,6 +28,7 @@ these libraries wakes up and declares your map broken.
 ```text
 auto-pigeon-libraries/
 ├── meta/used-by.schema.json  # schema for each package's consumer manifest
+├── workspace/                # the canonical Auto-Pigeon workspace manifest (see workspace/README.md)
 ├── fixtures/                 # shared apmap fixtures (see fixtures/README.md)
 ├── ts/                       # one folder per TypeScript package
 └── go/                       # one folder per Go package (none yet)
@@ -39,7 +40,7 @@ which names the repositories that consume it and validates against
 
 | package | what it is |
 | --- | --- |
-| [`ts/apmap-schema`](ts/apmap-schema/) | the canonical JSON Schema for APMap, the native geometry document format — 1.1, plus 1.0 frozen for converters and archived documents. Schema and conformance vectors only. |
+| [`ts/apmap-schema`](ts/apmap-schema/) | the canonical APMap contract. **1.1 = current runtime contract; 1.0 = deprecated historical contract.** Exactly one current schema, its normative `SEMANTICS.md`, and its conformance vectors. Contract material only, no runtime code. |
 
 The TypeScript APMap reader/writer/validator is next; it will consume
 `apmap-schema` rather than carry its own copy.
@@ -56,8 +57,27 @@ them installed on that first run. With no packages present at all it exits 0 and
 says there is nothing to test, rather than failing or printing a green summary
 for a suite that never ran.
 
-Some tests read the mapper corpus at `$MAPPER_ROOT`, which is not part of this
-repository. From a bare clone those skip, saying so, and everything else runs.
+Some tests read the generated corpora at `$MAPPER_ROOT`, which are not part of
+this repository. From a bare clone each skips by name, and everything else runs —
+including the whole published contract, current and deprecated.
+
+## The APMap contract, in one sentence
+
+`ts/apmap-schema/schema/` holds **exactly one** `apmap-*.schema.json`; its filename carries the
+current version; every service derives that version by reading the directory at startup and refuses
+any other version before validating anything. Deprecated schemas live under `schema/deprecated/`,
+are outside `exports`, and are never loaded by product code.
+
+## The workspace manifest
+
+[`workspace/auto-pigeon-workspace.json`](workspace/) names the repositories that make up an
+Auto-Pigeon workspace, with their aliases, directory names and clone URLs. It is the single
+canonical list: `auto-pigeon-tools` resolves workspace topology from it, derives the APMap schema
+directory from its AULIBS entry, and its clone and pull scripts derive what to clone and pull from
+it rather than each carrying a copy.
+
+Topology only. No machine paths, no `$MAPPER_ROOT`, no ports, no secrets — and no schema path, which
+AUT derives rather than reads.
 
 ## Using a package
 

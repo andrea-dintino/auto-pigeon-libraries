@@ -1,0 +1,267 @@
+{
+  "$schema": "https://auto-pigeon.org/schemas/apmap/1.0/apmap.schema.json",
+  "apmap_version": "1.0",
+  "document_id": "vector06croppedcontextcaps",
+  "revision": 0,
+  "role": "cropped_context",
+  "game": "quake1",
+  "map_dialect": "quake_standard",
+  "id_policy": "minted",
+  "frame": {
+    "space": "source_world",
+    "units": "quake_unit",
+    "coordinate_system": {
+      "handedness": "right",
+      "up_axis": "z"
+    },
+    "to_source": {
+      "type": "identity"
+    }
+  },
+  "entities": [
+    {
+      "entity_id": "ent_vector0600000000",
+      "content": [
+        {
+          "kind": "property",
+          "key": "classname",
+          "value": "worldspawn"
+        },
+        {
+          "kind": "brush",
+          "brush_id": "brs_crop000000000000",
+          "faces": [
+            {
+              "face_id": "fac_crop000000000000",
+              "derived_from": {
+                "kind": "synthetic",
+                "generator": "ai-mapcopilot.context_crop",
+                "reason": "context_crop"
+              },
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ]
+                ]
+              },
+              "texture": "CONTEXT_CROP",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              },
+              "synthetic": true,
+              "synthetic_reason": "context_crop"
+            },
+            {
+              "face_id": "fac_crop000000000001",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_crop000000000002",
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_crop000000000003",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_crop000000000004",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_crop000000000005",
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "ai-mapcopilot.context_crop": {
+      "display_only": true,
+      "margin": [
+        128,
+        128,
+        128
+      ],
+      "grid": 1
+    }
+  }
+}

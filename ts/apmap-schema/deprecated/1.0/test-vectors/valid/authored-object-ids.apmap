@@ -1,0 +1,301 @@
+{
+  "$schema": "https://auto-pigeon.org/schemas/apmap/1.0/apmap.schema.json",
+  "apmap_version": "1.0",
+  "document_id": "vector07authoredobjectids",
+  "revision": 0,
+  "role": "full_map",
+  "game": "quake1",
+  "map_dialect": "quake_standard",
+  "id_policy": "derived",
+  "frame": {
+    "space": "source_world",
+    "units": "quake_unit",
+    "coordinate_system": {
+      "handedness": "right",
+      "up_axis": "z"
+    },
+    "to_source": {
+      "type": "identity"
+    }
+  },
+  "provenance": {
+    "producer": "auto-pigeon",
+    "producer_version": "1.0"
+  },
+  "entities": [
+    {
+      "entity_id": "ent_5916cb802c73477a",
+      "derived_from": {
+        "kind": "authored",
+        "document_id": "vector07authoredobjectids",
+        "operation_id": "op-9f2a",
+        "ordinal": 0
+      },
+      "content": [
+        {
+          "kind": "property",
+          "key": "classname",
+          "value": "worldspawn"
+        },
+        {
+          "kind": "brush",
+          "brush_id": "brs_ca4a6a07cdc99620",
+          "derived_from": {
+            "kind": "authored",
+            "document_id": "vector07authoredobjectids",
+            "operation_id": "op-9f2a",
+            "ordinal": 1
+          },
+          "faces": [
+            {
+              "face_id": "fac_cd39c5a0835524ec",
+              "derived_from": {
+                "kind": "authored",
+                "document_id": "vector07authoredobjectids",
+                "operation_id": "op-9f2a",
+                "ordinal": 2
+              },
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_8ab1e0345f32166f",
+              "derived_from": {
+                "kind": "authored",
+                "document_id": "vector07authoredobjectids",
+                "operation_id": "op-9f2a",
+                "ordinal": 3
+              },
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    0,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_54f9b77bb0a673a6",
+              "derived_from": {
+                "kind": "authored",
+                "document_id": "vector07authoredobjectids",
+                "operation_id": "op-9f2a",
+                "ordinal": 4
+              },
+              "plane": {
+                "points": [
+                  [
+                    64,
+                    64,
+                    64
+                  ],
+                  [
+                    64,
+                    64,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_fd74faa8964ad9bf",
+              "derived_from": {
+                "kind": "authored",
+                "document_id": "vector07authoredobjectids",
+                "operation_id": "op-9f2a",
+                "ordinal": 5
+              },
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_b2c336004418a8ef",
+              "derived_from": {
+                "kind": "authored",
+                "document_id": "vector07authoredobjectids",
+                "operation_id": "op-9f2a",
+                "ordinal": 6
+              },
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ],
+                  [
+                    64,
+                    0,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_8a0171a9e7e61a60",
+              "derived_from": {
+                "kind": "authored",
+                "document_id": "vector07authoredobjectids",
+                "operation_id": "op-9f2a",
+                "ordinal": 7
+              },
+              "plane": {
+                "points": [
+                  [
+                    0,
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    64,
+                    0
+                  ],
+                  [
+                    0,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

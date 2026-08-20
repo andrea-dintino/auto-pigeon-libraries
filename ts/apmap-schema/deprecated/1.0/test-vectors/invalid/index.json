@@ -1,0 +1,111 @@
+{
+  "apmap_version": "1.0",
+  "expectation": "every listed document must be rejected, by the stated rule",
+  "vectors": [
+    {
+      "file": "apmap-version-wrong.apmap",
+      "rule": "SCH-1",
+      "violation": "apmap_version must be const \"1.0\"; this document declares \"1.1\"."
+    },
+    {
+      "file": "missing-document-id.apmap",
+      "rule": "SCH-2",
+      "violation": "document_id is required and is absent."
+    },
+    {
+      "file": "negative-revision.apmap",
+      "rule": "SCH-3",
+      "violation": "revision has minimum 0; this document declares -1."
+    },
+    {
+      "file": "unknown-role.apmap",
+      "rule": "SCH-4",
+      "violation": "role must be one of full_map, prefab_core, reference_context, cropped_context; \"context\" is not in the enum."
+    },
+    {
+      "file": "unknown-top-level-member.apmap",
+      "rule": "SCH-5",
+      "violation": "the document object sets additionalProperties false; \"comment\" is undeclared. Vendor data belongs in extensions."
+    },
+    {
+      "file": "brush-too-few-faces.apmap",
+      "rule": "SCH-6",
+      "violation": "faces has minItems 4; a bounded convex solid cannot be built from three half-spaces."
+    },
+    {
+      "file": "face-plane-two-points.apmap",
+      "rule": "SCH-7",
+      "violation": "plane.points requires exactly three points; this face supplies two."
+    },
+    {
+      "file": "valve220-missing-axes.apmap",
+      "rule": "SCH-8",
+      "violation": "a valve220 projection requires u_axis and v_axis; neither is present, so the projection matches neither branch of the oneOf."
+    },
+    {
+      "file": "classic-with-valve-axes.apmap",
+      "rule": "SCH-9",
+      "violation": "the classic projection sets additionalProperties false; u_axis and v_axis are Valve 220 members and cannot be mixed into one face."
+    },
+    {
+      "file": "bad-id-prefix.apmap",
+      "rule": "SCH-10",
+      "violation": "entity_id must match ^ent_[0-9A-Za-z]{8,64}$; a brush id was used where an entity id belongs."
+    },
+    {
+      "file": "extension-key-not-namespaced.apmap",
+      "rule": "SCH-11",
+      "violation": "an extensions namespace must contain at least one dot; the bare word \"review\" claims a global name."
+    },
+    {
+      "file": "entity-empty-content.apmap",
+      "rule": "SCH-12",
+      "violation": "entity content has minItems 1; an entity with neither a property nor a brush carries no information."
+    },
+    {
+      "file": "affine-transform-reserved.apmap",
+      "rule": "SCH-13",
+      "violation": "APMap 1.0 permits only identity and translation transforms; \"affine\" is reserved for a later version and matches neither branch of the oneOf."
+    },
+    {
+      "file": "duplicate-object-id.apmap",
+      "rule": "SEM-1",
+      "violation": "two brushes share one brush_id. Object ids must be unique across every entity, brush and face in the document. JSON Schema cannot express cross-document uniqueness, so a semantic validator must reject this."
+    },
+    {
+      "file": "dangling-relationship.apmap",
+      "rule": "SEM-2",
+      "violation": "relationship.to references an id that no object in the document declares. Reference integrity is semantic, not schema-checkable."
+    },
+    {
+      "file": "synthetic-reason-without-synthetic.apmap",
+      "rule": "SEM-3",
+      "violation": "synthetic_reason is present while synthetic is absent. The two members must appear together and synthetic must be true."
+    },
+    {
+      "file": "world-frame-with-translation.apmap",
+      "rule": "SEM-4",
+      "violation": "space is source_world, so to_source must be the identity transform. A document already in source coordinates cannot also declare a translation back to them."
+    },
+    {
+      "file": "unbounded-brush.apmap",
+      "rule": "SEM-6",
+      "violation": "four planes that do not enclose a finite volume. The face count satisfies the schema; boundedness must be proved by half-space intersection."
+    },
+    {
+      "file": "collinear-plane-points.apmap",
+      "rule": "SEM-5",
+      "violation": "three collinear points define no plane. The schema counts the points; only a semantic check can reject a degenerate triple."
+    },
+    {
+      "file": "face-missing-id.apmap",
+      "rule": "SCH-14",
+      "violation": "face_id is required on every face."
+    },
+    {
+      "file": "non-finite-number.apmap",
+      "rule": "SEM-11",
+      "violation": "a coordinate is written as 1e400, which decodes to Infinity. Every APMap number must be finite; JSON Schema's \"number\" type cannot express that."
+    }
+  ]
+}

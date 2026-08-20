@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/auto-pigeon/auto-pigeon-libraries/workspace/auto-pigeon-workspace.schema.json",
+  "title": "Auto-Pigeon workspace manifest",
+  "description": "The repositories that make up an Auto-Pigeon workspace. Deliberately minimal: this is shared TOPOLOGY, not a configuration dump. Machine paths, the $MAPPER_ROOT data root, ports, hostnames and secrets are per-machine or per-service and are excluded by construction — additionalProperties is false at every level, so a well-meaning addition fails validation rather than quietly becoming a contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "repositories"],
+  "properties": {
+    "$schema": { "type": "string", "description": "Optional pointer to this schema, so an editor can validate the manifest as it is typed." },
+    "schema_version": { "type": "string", "description": "This manifest format's version, not any repository's version.", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "description": { "type": "string", "minLength": 1 },
+    "repositories": {
+      "type": "array",
+      "description": "Every repository in the workspace. Order is presentational; consumers must not depend on it.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["alias", "directory", "clone_url"],
+        "properties": {
+          "alias": { "type": "string", "description": "The short uppercase alias used throughout the prompts, handoffs and agent tooling, e.g. \"AUP\".", "pattern": "^[A-Z][A-Z0-9]*$" },
+          "directory": { "type": "string", "description": "The repository's directory name inside the workspace. A bare name, never a path: a manifest that could say \"../elsewhere\" would be describing one machine's layout rather than the workspace's shape.", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "clone_url": { "type": "string", "description": "The HTTPS clone URL. HTTPS only, so the clone scripts' credential-cache behaviour applies uniformly and no SSH key layout is assumed.", "pattern": "^https://[^\\s]+\\.git$" },
+          "role": { "type": "string", "description": "One line on what the repository is for. Documentation; nothing branches on it.", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
