@@ -1,0 +1,10 @@
+{
+  "package": "games/quake1/extraction-params",
+  "consumers": [
+    {
+      "repo": "auto-pigeon-extractor",
+      "usage": "Its stair assembler resolves the effective player hull and maximum step height from walkability.json whenever an extraction request omits extraction_params.walkability; the values gate tread, landing and transition discovery.",
+      "added": "2026-08-21"
+    }
+  ]
+}

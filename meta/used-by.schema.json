@@ -2,15 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/auto-pigeon/auto-pigeon-libraries/meta/used-by.schema.json",
   "title": "AULIBS package consumer manifest",
-  "description": "Every package folder under ts/ or go/ carries a used-by.json validating against this schema. It names the repositories that consume the package, so an agent changing the package knows what it may break.",
+  "description": "Every package folder under ts/, go/ or games/<game>/ carries a used-by.json validating against this schema. It names the repositories that consume the package, so an agent changing the package knows what it may break.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["package", "consumers"],
+  "required": [
+    "package",
+    "consumers"
+  ],
   "properties": {
     "package": {
       "type": "string",
-      "description": "This package's path within the repository, e.g. \"ts/apmap\".",
-      "pattern": "^(ts|go)/[a-z0-9]+(-[a-z0-9]+)*$"
+      "description": "This package's path within the repository, e.g. \"ts/apmap\" or \"games/quake1/extraction-params\".",
+      "pattern": "^(ts|go)/[a-z0-9]+(-[a-z0-9]+)*$|^games/[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*$"
     },
     "consumers": {
       "type": "array",
@@ -18,7 +21,11 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["repo", "usage", "added"],
+        "required": [
+          "repo",
+          "usage",
+          "added"
+        ],
         "properties": {
           "repo": {
             "type": "string",
