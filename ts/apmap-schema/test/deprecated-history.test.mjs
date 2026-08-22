@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import {
-  compile, currentVersion, deprecated10, deprecatedSchemaPath, describeErrors, loadCurrentSchema, readJson,
+  compile, currentVersion, deprecated10, deprecatedSchemaPath, describeErrors, loadCurrentSchema, promoteToCurrent, readJson,
 } from './helpers.mjs';
 
 const schema10 = readJson(deprecatedSchemaPath());
@@ -69,9 +69,13 @@ test('the SEM-* vectors are schema-valid, which is what makes them useful', (t) 
  * Migration evidence: the current schema can express the old documents' SHAPE.
  *
  * Read this precisely. It does not mean a 1.0 document is accepted — the version gate refuses it
- * before any of this runs. It means a migration tool would only have to rewrite the declared
- * version, not restructure geometry. That is worth knowing before somebody writes one, and worth
- * failing loudly if it stops being true.
+ * before any of this runs. It means a migration tool only has to rewrite the declared version and
+ * supply the current contract's structural defaults, not restructure geometry. That is worth
+ * knowing before somebody writes one, and worth failing loudly if it stops being true.
+ *
+ * `promoteToCurrent` is that whole promotion, and 1.2 is the first version to need more than the
+ * header: it requires `groups`, which no 1.0 document could declare. Everything else is copied by
+ * reference, so what this proves is that no geometry, id or provenance is rebuilt on the way.
  */
 test('the current schema can express every published 1.0 document', (t) => {
   const files = [
@@ -81,13 +85,14 @@ test('the current schema can express every published 1.0 document', (t) => {
   assert.ok(files.length >= 13);
   const unexpressible = [];
   for (const file of files) {
-    // Only the declared version is rewritten — exactly what a migration would do.
-    const migrated = { ...readJson(file), apmap_version: currentVersion() };
+    // Only the header and the current contract's structural defaults — exactly what a migration
+    // does. Nothing here touches entities, relationships or provenance.
+    const migrated = promoteToCurrent(readJson(file));
     if (!validateCurrent(migrated)) unexpressible.push(`${file}:\n  ${describeErrors(validateCurrent.errors)}`);
   }
   assert.deepEqual(unexpressible, [],
-    `migration to ${currentVersion()} would not be a header rewrite for:\n${unexpressible.join('\n')}`);
-  t.diagnostic(`${files.length} published 1.0 documents are expressible in ${currentVersion()} after a header rewrite`);
+    `migration to ${currentVersion()} would not be a header-and-defaults rewrite for:\n${unexpressible.join('\n')}`);
+  t.diagnostic(`${files.length} published 1.0 documents are expressible in ${currentVersion()} after the documented promotion`);
 });
 
 test('the canonical rejection fixture is intact', () => {
@@ -97,6 +102,6 @@ test('the canonical rejection fixture is intact', () => {
   const document = readJson(deprecated10('one-zero-document.apmap'));
   assert.equal(document.apmap_version, '1.0');
   assert.ok(validate10(document), 'the rejection fixture must be a VALID 1.0 document');
-  assert.ok(validateCurrent({ ...document, apmap_version: currentVersion() }),
-    'and must differ from a current document only by its declared version');
+  assert.ok(validateCurrent(promoteToCurrent(document)),
+    'and must differ from a current document only by its declared version and 1.2\'s empty groups');
 });

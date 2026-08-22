@@ -1,7 +1,7 @@
 {
   "$schema": "https://auto-pigeon.org/schemas/apmap/1.2/apmap.schema.json",
   "apmap_version": "1.2",
-  "document_id": "vector-1-1-operation-minimal",
+  "document_id": "vector-1-1-no-new-features",
   "revision": 0,
   "role": "full_map",
   "game": "quake1",
@@ -245,11 +245,7 @@
                 ]
               }
             }
-          ],
-          "derived_from": {
-            "kind": "operation",
-            "operation_id": "op-4f1c8a20"
-          }
+          ]
         }
       ]
     }

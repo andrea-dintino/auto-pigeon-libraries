@@ -1,14 +1,14 @@
 {
-  "apmap_version": "1.1",
-  "description": "Conformance vectors for the CURRENT APMap contract. Every valid vector must be accepted by the one schema under schema/; every invalid one must be rejected, and rejected for the reason recorded here rather than incidentally. A document declaring a deprecated version is not a vector here at all \u2014 it is refused by the runtime version gate before validation is reached, and deprecated/1.0/one-zero-document.apmap is the fixture for that.",
+  "apmap_version": "1.2",
+  "description": "Conformance vectors for the CURRENT APMap contract. Every valid vector must be accepted by the one schema under schema/; every invalid one must be rejected, and rejected for the reason recorded here rather than incidentally. A document declaring a deprecated version is not a vector here at all — it is refused by the runtime version gate before validation is reached, and deprecated/1.0/one-zero-document.apmap and deprecated/1.1/one-one-document.apmap are the fixtures for that.",
   "valid": [
     {
       "file": "operation-derived-brush.apmap",
-      "exercises": "derived_from kind 'operation' on a brush, with every optional member present: operation, ordinal, replaces, intent."
+      "exercises": "derived_from kind 'operation' on a brush, with every optional member present: operation, ordinal, replaces, intent. Inherited from 1.1 and still current."
     },
     {
       "file": "operation-derived-minimal.apmap",
-      "exercises": "derived_from kind 'operation' carrying nothing but kind and operation_id \u2014 the documented minimum."
+      "exercises": "derived_from kind 'operation' carrying nothing but kind and operation_id — the documented minimum."
     },
     {
       "file": "operation-derived-entity-and-face.apmap",
@@ -23,8 +23,20 @@
       "exercises": "broken: false written explicitly. Absent means false, but a producer that writes it is not in error."
     },
     {
-      "file": "no-1-1-features.apmap",
-      "exercises": "a document declaring 1.1 and using neither addition. 1.1 requires nothing new of a producer."
+      "file": "no-1-2-features.apmap",
+      "exercises": "a document declaring 1.2 and holding no group. `groups` is required of a 1.2 writer, so the empty array is what 'no groups' looks like — an absent member would be indistinguishable from a producer that has never heard of groups."
+    },
+    {
+      "file": "group-two-brushes.apmap",
+      "exercises": "1.2's addition at its simplest: one group named 'Entrance Columns' over two brushes."
+    },
+    {
+      "file": "group-mixed-members.apmap",
+      "exercises": "one group holding all three member kinds at once — entity, brush and face — each through its own kind-specific id field."
+    },
+    {
+      "file": "group-two-groups.apmap",
+      "exercises": "two groups in one document, deliberately sharing the visible name 'Group 1'. The name is a label; identity is group_id, and duplicates are legal."
     }
   ],
   "invalid": [
@@ -76,11 +88,98 @@
     },
     {
       "file": "unknown-apmap-version.apmap",
-      "rule": "1.1-VER-1",
-      "violation": "apmap_version \"1.2\" is not a version this schema defines. An unknown version is refused rather than guessed at.",
+      "rule": "1.2-VER-1",
+      "violation": "apmap_version \"1.3\" is not a version this schema defines. An unknown FUTURE version is refused rather than guessed at — the same refusal 1.1 gave \"1.2\" before 1.2 existed.",
       "expect_document": {
         "keyword": "enum",
         "instancePath": "/apmap_version"
+      }
+    },
+    {
+      "file": "groups-missing.apmap",
+      "rule": "1.2-GRP-1",
+      "violation": "the document declares 1.2 and omits `groups`. A 1.2 writer always emits the member; an absent one is indistinguishable from a producer that does not know groups exist, and 'no groups' must be sayable.",
+      "expect_document": {
+        "keyword": "required",
+        "instancePath": ""
+      }
+    },
+    {
+      "file": "group-one-member.apmap",
+      "rule": "1.2-GRP-2",
+      "violation": "a group with one member. A one-member group is a selection with extra steps; the editor dissolves one rather than persisting it, so the contract refuses to store one.",
+      "expect_fragment": {
+        "pointer": "/groups/0",
+        "def": "group",
+        "keyword": "minItems",
+        "instancePath": "/members"
+      }
+    },
+    {
+      "file": "group-empty-name.apmap",
+      "rule": "1.2-GRP-3",
+      "violation": "a name of three spaces. The name is what a user reads in the Groups list, so it must be non-empty after trimming; `pattern: \\S` is how the schema says 'at least one non-whitespace character'.",
+      "expect_fragment": {
+        "pointer": "/groups/0",
+        "def": "group",
+        "keyword": "pattern",
+        "instancePath": "/name"
+      }
+    },
+    {
+      "file": "group-bad-id-prefix.apmap",
+      "rule": "1.2-GRP-4",
+      "violation": "group_id 'group_entrance0001' uses the wrong prefix. Every APMap id kind is distinguishable from its prefix alone; `grp_` is the group's.",
+      "expect_fragment": {
+        "pointer": "/groups/0",
+        "def": "group",
+        "keyword": "pattern",
+        "instancePath": "/group_id"
+      }
+    },
+    {
+      "file": "group-member-wrong-kind.apmap",
+      "rule": "1.2-GRP-5",
+      "violation": "a member declaring kind 'entity' whose entity_id holds a brush id. The union is discriminated on kind and each arm names its own id field, so a mismatched reference fails at the contract rather than later, at resolution.",
+      "expect_fragment": {
+        "pointer": "/groups/0/members/0",
+        "def": "group_member",
+        "keyword": "pattern",
+        "instancePath": "/entity_id"
+      }
+    },
+    {
+      "file": "group-member-untyped.apmap",
+      "rule": "1.2-GRP-6",
+      "violation": "a member carrying a generic `object_id` instead of the kind's own field. One untyped id field is exactly what the discriminated union exists to prevent.",
+      "expect_fragment": {
+        "pointer": "/groups/0/members/0",
+        "def": "group_member",
+        "keyword": "required",
+        "instancePath": "",
+        "missingProperty": "brush_id"
+      }
+    },
+    {
+      "file": "group-unknown-member-field.apmap",
+      "rule": "1.2-GRP-7",
+      "violation": "a member carrying an undeclared member 'label'. additionalProperties is false: a member is a reference and nothing else, and per-member editor state is not map truth.",
+      "expect_fragment": {
+        "pointer": "/groups/0/members/0",
+        "def": "group_member",
+        "keyword": "required",
+        "instancePath": ""
+      }
+    },
+    {
+      "file": "group-duplicate-member.apmap",
+      "rule": "1.2-GRP-8",
+      "violation": "the same brush listed twice in one group. Membership is a set; a duplicate says nothing new and would make member counts lie.",
+      "expect_fragment": {
+        "pointer": "/groups/0",
+        "def": "group",
+        "keyword": "uniqueItems",
+        "instancePath": "/members"
       }
     }
   ]

@@ -161,6 +161,24 @@ export const DEPRECATED_ROOT = path.join(PACKAGE_ROOT, 'deprecated');
 export const deprecatedSchemaPath = () => path.join(SCHEMA_DIR, 'deprecated', 'apmap-1.0.schema.json');
 export const deprecated10 = (...segments) => path.join(DEPRECATED_ROOT, '1.0', ...segments);
 
+/**
+ * THE DOCUMENTED PROMOTION, as the contract defines it — the one place these tests express it.
+ *
+ * A legacy document becomes a current one by rewriting the declared version and supplying the
+ * structural defaults the current contract requires and the old one had no place for. Today that
+ * is exactly one member: `groups`, which 1.2 requires of every writer and 1.0/1.1 could not say.
+ *
+ * What makes this evidence rather than a formality is what it does NOT do. It copies every other
+ * member by reference — no geometry is rebuilt, no id is reminted, no provenance is rewritten — so
+ * a promotion that passes here is provably a header-and-default change and nothing more. When a
+ * future version needs a second default, it is added here and every migration test moves with it.
+ */
+export const promoteToCurrent = (document, version = currentVersion()) => ({
+  ...document,
+  apmap_version: version,
+  groups: document.groups ?? [],
+});
+
 export const describeErrors = (errors) =>
   (errors ?? []).map((error) => `${error.keyword} @ ${error.instancePath || '/'}: ${error.message}`).join('\n  ');
 

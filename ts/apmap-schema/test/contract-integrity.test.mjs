@@ -14,14 +14,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import {
-  CURRENT_SCHEMA_PATTERN, DEPRECATED_SCHEMA_DIR, PACKAGE_ROOT, SCHEMA_DIR, compile,
+  CURRENT_SCHEMA_PATTERN, DEPRECATED_ROOT, DEPRECATED_SCHEMA_DIR, PACKAGE_ROOT, SCHEMA_DIR, compile,
   currentSchemaFiles, currentSchemaPath, currentVersion, deprecated10, deprecatedSchemaPath,
   legacySchemaFiles, loadContractBundle, loadCurrentSchema, readJson, readableVersions,
 } from './helpers.mjs';
 
 test('exactly one current schema sits directly under schema/', () => {
   const found = currentSchemaFiles();
-  assert.deepEqual(found, ['apmap-1.1.schema.json'],
+  assert.deepEqual(found, ['apmap-1.2.schema.json'],
     `schema/ must hold exactly one apmap-*.schema.json; found: ${found.join(', ') || '(none)'}`);
 });
 
@@ -32,7 +32,7 @@ test('the current schema is valid JSON and compiles', () => {
 });
 
 test('the current version is derived from the filename, not declared anywhere', () => {
-  assert.equal(currentVersion(), '1.1');
+  assert.equal(currentVersion(), '1.2');
   // The derivation, spelled out: nothing reads a version constant to get this.
   const derived = CURRENT_SCHEMA_PATTERN.exec(path.basename(currentSchemaPath()))[1];
   assert.equal(derived, currentVersion());
@@ -64,21 +64,24 @@ test('the current schema structurally accepting a 1.0 shape is not how 1.0 is re
   assert.ok(contract.enum.includes(currentVersion()));
 });
 
-test('the deprecated schema is readable legacy, and can never be the writer contract', () => {
+test('the deprecated schemas are readable legacy, and can never be the writer contract', () => {
   assert.ok(fs.existsSync(deprecatedSchemaPath()), 'the frozen 1.0 schema is a runtime read contract');
   // It lives one level down, so the CURRENT scan — which reads direct children only — cannot see
   // it. That is the mechanism: depth is what separates "readable" from "writable". A reader
   // enumerating deprecated/ finds it deliberately; a writer never can.
   assert.equal(path.dirname(deprecatedSchemaPath()), DEPRECATED_SCHEMA_DIR);
   assert.ok(!currentSchemaFiles().includes('apmap-1.0.schema.json'));
-  assert.deepEqual(legacySchemaFiles(), ['apmap-1.0.schema.json']);
+  // 1.1 joined 1.0 down here when 1.2 was promoted. Its file was MOVED, not rewritten: a frozen
+  // contract that gets edited stops being the record of what that version said.
+  assert.ok(!currentSchemaFiles().includes('apmap-1.1.schema.json'));
+  assert.deepEqual(legacySchemaFiles(), ['apmap-1.0.schema.json', 'apmap-1.1.schema.json']);
 });
 
 test('the readable versions are derived from the layout, not from a maintained list', () => {
-  assert.deepEqual(readableVersions(), ['1.0', '1.1']);
+  assert.deepEqual(readableVersions(), ['1.0', '1.1', '1.2']);
   const bundle = loadContractBundle();
   assert.equal(bundle.current.version, currentVersion());
-  assert.equal(bundle.current.version, '1.1');
+  assert.equal(bundle.current.version, '1.2');
   // The current version is always readable — a build that could write a document it could not
   // read back would be a contract nobody could use.
   assert.ok(bundle.readable.has(bundle.current.version));
@@ -128,4 +131,32 @@ test('the deprecated 1.0 corpus is present, frozen, and documented', () => {
   }
   assert.equal(readJson(deprecated10('one-zero-document.apmap')).apmap_version, '1.0',
     'the canonical rejection fixture must still declare the deprecated version');
+});
+
+test('the deprecated 1.1 corpus is present, frozen, and documented', () => {
+  // The same quarantine 1.0 got, applied to 1.1 the day 1.2 was promoted. Same rule: checked-in
+  // fixture material, so a missing file fails rather than skips.
+  const at = (...segments) => path.join(DEPRECATED_ROOT, '1.1', ...segments);
+  assert.ok(fs.existsSync(at('README.md')), 'the quarantine must say what it is');
+  const index = readJson(at('test-vectors', 'index.json'));
+  assert.equal(index.apmap_version, '1.1');
+  for (const kind of ['valid', 'invalid']) {
+    const onDisk = fs.readdirSync(at('test-vectors', kind)).filter((n) => n.endsWith('.apmap')).sort();
+    assert.deepEqual(index[kind].map((entry) => entry.file).sort(), onDisk);
+  }
+  // Only the VALID set declares 1.1. One invalid vector declares a version 1.1 had never heard of,
+  // which is exactly what it is testing — 1.1 refused "1.2" then, as 1.2 refuses "1.3" now.
+  for (const entry of index.valid)
+    assert.equal(readJson(at('test-vectors', 'valid', entry.file)).apmap_version, '1.1',
+      `${entry.file} is not a 1.1 document`);
+  assert.equal(readJson(at('one-one-document.apmap')).apmap_version, '1.1',
+    'the canonical rejection fixture must still declare the deprecated version');
+
+  // And it is a VALID 1.1 document, so a consumer proving its gate refuses 1.1 knows the refusal
+  // was about the version and not about a second fault in the fixture.
+  const frozen11 = compile(readJson(path.join(DEPRECATED_SCHEMA_DIR, 'apmap-1.1.schema.json')));
+  assert.ok(frozen11(readJson(at('one-one-document.apmap'))));
+  for (const entry of index.valid)
+    assert.ok(frozen11(readJson(at('test-vectors', 'valid', entry.file))),
+      `${entry.file} is no longer accepted by the frozen 1.1 contract`);
 });

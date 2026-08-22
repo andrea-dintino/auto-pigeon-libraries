@@ -1,7 +1,7 @@
 {
-  "$schema": "https://auto-pigeon.org/schemas/apmap/1.2/apmap.schema.json",
-  "apmap_version": "1.2",
-  "document_id": "vector-1-1-operation-minimal",
+  "$schema": "https://auto-pigeon.org/schemas/apmap/1.1/apmap.schema.json",
+  "apmap_version": "1.1",
+  "document_id": "vector-1-1-operation-everywhere",
   "revision": 0,
   "role": "full_map",
   "game": "quake1",
@@ -68,6 +68,14 @@
                   1,
                   1
                 ]
+              },
+              "derived_from": {
+                "kind": "operation",
+                "operation_id": "op-4f1c8a20",
+                "ordinal": 3,
+                "metadata": {
+                  "note": "cap face left by the carve"
+                }
               }
             },
             {
@@ -248,11 +256,23 @@
           ],
           "derived_from": {
             "kind": "operation",
-            "operation_id": "op-4f1c8a20"
+            "operation_id": "op-4f1c8a20",
+            "operation": "csg_carve",
+            "ordinal": 0,
+            "replaces": [
+              "brs_ancestor00000a"
+            ],
+            "intent": "carve a doorway through the north wall"
           }
         }
-      ]
+      ],
+      "derived_from": {
+        "kind": "operation",
+        "operation_id": "op-4f1c8a20",
+        "replaces": [
+          "ent_ancestor00000a"
+        ]
+      }
     }
-  ],
-  "groups": []
+  ]
 }

@@ -7,16 +7,19 @@ Auto-Pigeon, and the collaboration service.
 validator are a separate package.
 
 ```text
-1.1 = current READ + WRITE contract
+1.2 = current READ + WRITE contract
+1.1 = deprecated legacy READ contract
 1.0 = deprecated legacy READ contract
 ```
 
 ```text
-schema/apmap-1.1.schema.json              THE current contract — exactly one file lives here
+schema/apmap-1.2.schema.json              THE current contract — exactly one file lives here
+schema/deprecated/apmap-1.1.schema.json   a supported LEGACY READ contract — never written
 schema/deprecated/apmap-1.0.schema.json   a supported LEGACY READ contract — never written
 SEMANTICS.md                              the normative specification, SCH-* and SEM-* rules
 test-vectors/                             conformance vectors for the CURRENT contract
 deprecated/1.0/                           the published 1.0 corpus and examples
+deprecated/1.1/                           the published 1.1 corpus
 workspace/ (repository root)              the canonical workspace manifest
 ```
 
@@ -29,7 +32,7 @@ VALIDATE    with the schema matching the document being read
 WIRE/COLLAB current only
 ```
 
-Today that resolves to: read 1.0 and 1.1, write 1.1.
+Today that resolves to: read 1.0, 1.1 and 1.2, write 1.2.
 
 **It is not a compatibility matrix.** Nothing here, and nothing in any consumer, maintains a list of
 supported versions. The directory layout IS the policy, and every service derives both halves of it
@@ -74,19 +77,54 @@ consumer that can choose a version is a consumer that will eventually choose the
 evidence for this repository's own tests. It is not shipped and is not a runtime input.
 `deprecated/1.0/README.md` is the full account.
 
-## How 1.1 relates to 1.0 — additive, which is what makes migration cheap
+## Every version is additive, which is what makes migration cheap
 
-1.1 was built **additively** from 1.0: it adds one `derived_from` kind (`operation`) and one
-optional brush member (`broken`), and changes nothing 1.0 already defined. `test/schema.test.mjs`
-walks both documents and fails if that stops being true.
+Each version was built **additively** from the one before, and `test/schema.test.mjs` walks the
+documents and fails if that stops being true. 1.1 added one `derived_from` kind (`operation`) and
+one optional brush member (`broken`). 1.2 adds `groups`.
 
-That matters for exactly one reason: a 1.0 → 1.1 migration can rewrite a document's declared version
-and nothing else — no geometry, no identity, no provenance. `test/deprecated-history.test.mjs`
-proves it over the whole published 1.0 corpus, and `test/corpus.test.mjs` proves it over the
-generated corpora when they are mounted. That is what lets a consumer open a legacy document,
-promote it in memory, and write current bytes without a migration wizard or a lossy conversion.
+That matters for exactly one reason: **promotion is mechanical**. A legacy document becomes a
+current one by rewriting the declared version and supplying the structural defaults the current
+contract requires — today exactly one, `groups: []`. No geometry is rebuilt, no id reminted, no
+provenance rewritten. `test/helpers.mjs` holds that promotion in one place as `promoteToCurrent`;
+`test/deprecated-history.test.mjs` proves it over the whole published 1.0 corpus, and
+`test/corpus.test.mjs` over the generated corpora when they are mounted. That is what lets a
+consumer open a legacy document, promote it in memory, and write current bytes without a migration
+wizard or a lossy conversion.
 
-## What 1.1 adds
+## What 1.2 adds
+
+### `groups` — named, persistent selection sets
+
+A group is a name over a set of objects the document already declares:
+
+```json
+{
+  "groups": [
+    {
+      "group_id": "grp_entrance00001",
+      "name": "Entrance Columns",
+      "members": [
+        { "kind": "brush",  "brush_id": "brs_cube00000000a1" },
+        { "kind": "entity", "entity_id": "ent_light000000001" }
+      ]
+    }
+  ]
+}
+```
+
+It owns no geometry, so it is cheap: deleting a group deletes nothing but the grouping. It is
+**map working state**, which is the whole reason it is here rather than in a sidecar — it is saved
+with the document, undone with the document, and seen by every collaborator, and none of those are
+true of a record kept beside the map.
+
+`groups` is **required of a 1.2 writer**, empty array included. An optional member would make "this
+map has no groups" and "this producer has never heard of groups" the same bytes.
+
+`SEMANTICS.md` §9a is the normative account: the discriminated member union, the two-member
+minimum, containment normalization, and the SCH-G-*/SEM-G-* rules.
+
+## What 1.1 added
 
 ### `derived_from` kind `operation`
 

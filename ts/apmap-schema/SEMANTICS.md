@@ -8,7 +8,8 @@
   THIS IS CURRENT CONTRACT MATERIAL, not history. The SEM-* rules are what every consumer's semantic
   checker implements, and the current contract inherits them unchanged. The title says 1.0 because
   that is the version the document was written for and 1.0 is frozen; 1.1 adds one `derived_from`
-  kind and one optional brush member and changes nothing here.
+  kind and one optional brush member and changes nothing here; 1.2 adds `groups`, specified in §9a
+  with its own SCH-G-* and SEM-G-* rules.
 
   It was published at $MAPPER_ROOT/formats/apmap/1.0/README.md until this repository became the
   authority, so that a public clone can read the normative rule catalogue without a data root.
@@ -460,6 +461,73 @@ understand.
 
 ---
 
+## 9a. Groups
+
+A **group** is a named, persistent selection set. It is map working state:
+saved with the document, undone with the document, and seen by every
+collaborator.
+
+```json
+{
+  "groups": [
+    {
+      "group_id": "grp_entrance00001",
+      "name": "Entrance Columns",
+      "members": [
+        { "kind": "brush",  "brush_id": "brs_cube00000000a1" },
+        { "kind": "entity", "entity_id": "ent_light000000001" },
+        { "kind": "face",   "face_id": "fac_00cube0000" }
+      ]
+    }
+  ]
+}
+```
+
+A group **owns no geometry**. Every member is a reference to an object the
+document already declares elsewhere, so deleting a group deletes nothing but
+the grouping.
+
+`groups` is **required of a 1.2 writer**, empty array included. An optional
+member would make "this map has no groups" and "this producer has never heard
+of groups" the same bytes, and a tool that drops what it does not understand
+would be indistinguishable from one that faithfully recorded a map with no
+groups.
+
+### `group_id`
+
+Stable canonical identity, `grp_` prefixed, minted like any other object id and
+unique across the document. It is **never derived from the name**: a name is a
+label a user retypes, and identity that moves when a label is edited is not
+identity.
+
+### `name`
+
+The user-visible label: 1–128 characters, at least one of them non-whitespace.
+It is a **label, not a reference** — nothing may address a group by name, and
+two groups in one document may carry the same name.
+
+### `members`
+
+A discriminated union on `kind`, each arm naming the id field for that kind.
+One untyped `object_id` would let a brush id sit under an entity member and fail
+later, at resolution, rather than at the contract.
+
+For this milestone: **at least two** direct members, no nesting, no duplicates,
+and an object is a direct member of **at most one** group. A one-member group is
+a selection with extra steps; an editor dissolves one rather than persisting it.
+
+### Containment normalization
+
+Direct membership must not hold both an object and its own descendant:
+
+```text
+entity + one of its owned brushes  ->  keep the entity
+brush  + one of its faces          ->  keep the brush
+```
+
+Both spellings would name the same geometry twice, and the member count — which
+a user reads — would stop meaning anything.
+
 ## 10. Rules enforced by JSON Schema
 
 | id | rule |
@@ -478,6 +546,17 @@ understand.
 | SCH-12 | entity `content` has at least 1 item |
 | SCH-13 | `to_source` is `identity` or `translation`; `affine` is reserved and rejected |
 | SCH-14 | a face requires `face_id`, `plane`, `texture`, `projection` |
+
+Added by 1.2, alongside `groups` (§9a):
+
+| id | rule |
+| --- | --- |
+| SCH-G-1 | `groups` is required and is an array; a 1.2 writer always emits it, empty or not |
+| SCH-G-2 | a group requires exactly `group_id`, `name`, `members`; it is closed |
+| SCH-G-3 | `group_id` matches `^grp_[0-9A-Za-z]{8,64}$` |
+| SCH-G-4 | `name` is 1–128 characters and contains at least one non-whitespace character |
+| SCH-G-5 | `members` has at least 2 items and no duplicates |
+| SCH-G-6 | a member is one of `entity`/`brush`/`face`, each closed and carrying only its own kind's id field |
 
 ## 11. Semantic validation rules
 
@@ -501,6 +580,23 @@ after schema validation.
 SEM-11 needs its own check because JSON Schema's `number` type accepts anything
 a JSON parser produced, and `1e400` decodes to `Infinity` in most parsers.
 
+Groups add six more, none of them expressible in JSON Schema because every one
+is a statement about the rest of the document:
+
+| id | rule |
+| --- | --- |
+| SEM-G-1 | every member reference resolves to an object declared in this document |
+| SEM-G-2 | a member's `kind` matches the referenced object's actual kind |
+| SEM-G-3 | every `group_id` is unique across the document |
+| SEM-G-4 | no object is a direct member of two groups |
+| SEM-G-5 | direct membership holds no ancestor/descendant pair (§9a, containment normalization) |
+| SEM-G-6 | a persisted group has at least two members; an editor dissolves one that falls below, in the same transaction that took the member away |
+
+A current-format document with a dangling group member is **invalid**. When an
+edit deletes a member object, group membership is updated in the *same* map
+transaction — there is no window in which the document is inconsistent, and no
+dangling one-member group is ever written.
+
 ## 12. Canonical serialization rules
 
 Two producers given the same document must emit the same bytes.
@@ -511,7 +607,7 @@ Two producers given the same document must emit the same bytes.
 | SER-2 | LF line endings only |
 | SER-3 | two-space indentation |
 | SER-4 | exactly one trailing newline at end of file |
-| SER-5 | object members in the order this specification declares them |
+| SER-5 | object members in the order this specification declares them — `groups` sits between `entities` and `relationships` |
 | SER-6 | arrays in **semantic** order — entity, content, face and relationship order is meaningful and is never sorted |
 | SER-7 | numbers are finite; a value that is mathematically an integer is emitted as a JSON integer; other values are rounded to 6 decimal places; `-0` is emitted as `0`; no exponent notation |
 | SER-8 | a document that must be reproducible carries no wall-clock timestamp. `provenance.generated_at` is permitted but forfeits byte determinism |
@@ -533,11 +629,15 @@ migration.
 ```text
 apmap/1.0/apmap.schema.json
 apmap/1.1/apmap.schema.json
+apmap/1.2/apmap.schema.json
 apmap/2.0/apmap.schema.json
 ```
 
-- **Minor version (1.x)** adds optional members and reserved-name semantics
-  only. It never removes a member, narrows a type, or changes a meaning.
+- **Minor version (1.x)** adds members and reserved-name semantics only. It
+  never removes a member, narrows a type, or changes a meaning. A minor version
+  may make a *new* member required of its own writers — 1.2 does, with `groups`
+  — because that constrains only producers that declare the new version, and a
+  reader of an older document is unaffected.
 - **Major version (x.0)** may break anything.
 - Because every core object is closed (SCH-5), a 1.0 validator **rejects** a 1.1
   document rather than silently ignoring its new members. Consumers must
@@ -545,6 +645,10 @@ apmap/2.0/apmap.schema.json
   version they do not implement.
 - Forward-compatible data belongs in `extensions`, which is the only member a
   1.0 consumer must preserve without understanding.
+- **Promotion** of a legacy document to the current contract rewrites the
+  declared version and supplies the structural defaults the current contract
+  requires — today exactly one, `groups: []`. It rebuilds no geometry, remints
+  no id and rewrites no provenance, which is what makes it mechanical.
 
 ## 14. `.map` import and export loss boundaries
 

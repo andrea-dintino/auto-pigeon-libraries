@@ -1,7 +1,7 @@
 {
-  "$schema": "https://auto-pigeon.org/schemas/apmap/1.2/apmap.schema.json",
-  "apmap_version": "1.2",
-  "document_id": "vector-1-1-operation-minimal",
+  "$schema": "https://auto-pigeon.org/schemas/apmap/1.1/apmap.schema.json",
+  "apmap_version": "1.1",
+  "document_id": "vector-bad-derived-kind",
   "revision": 0,
   "role": "full_map",
   "game": "quake1",
@@ -247,12 +247,11 @@
             }
           ],
           "derived_from": {
-            "kind": "operation",
+            "kind": "rewrite",
             "operation_id": "op-4f1c8a20"
           }
         }
       ]
     }
-  ],
-  "groups": []
+  ]
 }

@@ -1,7 +1,7 @@
 {
   "$schema": "https://auto-pigeon.org/schemas/apmap/1.2/apmap.schema.json",
   "apmap_version": "1.2",
-  "document_id": "vector-1-1-operation-minimal",
+  "document_id": "vector-1-2-group-untyped",
   "revision": 0,
   "role": "full_map",
   "game": "quake1",
@@ -245,14 +245,256 @@
                 ]
               }
             }
-          ],
-          "derived_from": {
-            "kind": "operation",
-            "operation_id": "op-4f1c8a20"
-          }
+          ]
+        },
+        {
+          "kind": "brush",
+          "brush_id": "brs_cube00000000b2",
+          "faces": [
+            {
+              "face_id": "fac_00cubeb0000",
+              "plane": {
+                "points": [
+                  [
+                    128,
+                    0,
+                    64
+                  ],
+                  [
+                    192,
+                    0,
+                    64
+                  ],
+                  [
+                    192,
+                    64,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_11cubeb0001",
+              "plane": {
+                "points": [
+                  [
+                    128,
+                    0,
+                    0
+                  ],
+                  [
+                    128,
+                    64,
+                    0
+                  ],
+                  [
+                    192,
+                    64,
+                    0
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_22cubeb0002",
+              "plane": {
+                "points": [
+                  [
+                    128,
+                    0,
+                    0
+                  ],
+                  [
+                    128,
+                    0,
+                    64
+                  ],
+                  [
+                    128,
+                    64,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_33cubeb0003",
+              "plane": {
+                "points": [
+                  [
+                    192,
+                    64,
+                    0
+                  ],
+                  [
+                    192,
+                    64,
+                    64
+                  ],
+                  [
+                    192,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_44cubeb0004",
+              "plane": {
+                "points": [
+                  [
+                    128,
+                    0,
+                    0
+                  ],
+                  [
+                    192,
+                    0,
+                    0
+                  ],
+                  [
+                    192,
+                    0,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            },
+            {
+              "face_id": "fac_55cubeb0005",
+              "plane": {
+                "points": [
+                  [
+                    128,
+                    64,
+                    0
+                  ],
+                  [
+                    128,
+                    64,
+                    64
+                  ],
+                  [
+                    192,
+                    64,
+                    64
+                  ]
+                ]
+              },
+              "texture": "METAL5_6",
+              "projection": {
+                "mode": "classic",
+                "shift": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "scale": [
+                  1,
+                  1
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "entity_id": "ent_light000000001",
+      "content": [
+        {
+          "kind": "property",
+          "key": "classname",
+          "value": "light"
+        },
+        {
+          "kind": "property",
+          "key": "origin",
+          "value": "32 32 96"
         }
       ]
     }
   ],
-  "groups": []
+  "groups": [
+    {
+      "group_id": "grp_untyped0000001",
+      "name": "Untyped",
+      "members": [
+        {
+          "kind": "brush",
+          "object_id": "brs_cube00000000a1"
+        },
+        {
+          "kind": "brush",
+          "brush_id": "brs_cube00000000b2"
+        }
+      ]
+    }
+  ]
 }

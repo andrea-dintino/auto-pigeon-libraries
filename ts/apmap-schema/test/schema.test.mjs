@@ -1,5 +1,5 @@
 /**
- * The schema documents themselves, and the hand-built vectors for what 1.1 adds.
+ * The schema documents themselves, and the hand-built vectors for what the current version adds.
  *
  * Nothing here runs on load, on import, or against a document nobody asked about — the package
  * carries no runtime code at all, and these are tests, which is the one place validation is
@@ -9,26 +9,38 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   compile, compileDef, currentVersion, describeErrors, loadCurrentSchema, readJson,
-  deprecatedSchemaPath, resolvePointer, vector, vectorIndex,
+  deprecatedSchemaPath, resolvePointer, vector, vectorIndex, DEPRECATED_SCHEMA_DIR,
 } from './helpers.mjs';
+import path from 'node:path';
 
-const schema11 = loadCurrentSchema();
+/** The CURRENT schema, whatever the filename says today. Never named after a version here. */
+const current = loadCurrentSchema();
 /**
  * The frozen 1.0 schema, read by an explicit repository-local path — the only way it is reachable.
  * Used ONLY by the history test at the bottom of this file, which asserts it has not thawed.
  */
 const schema10 = readJson(deprecatedSchemaPath());
 const index = vectorIndex();
+/** The frozen 1.1 schema. It moved into `deprecated/` when 1.2 was promoted; it was not edited. */
+const schema11 = readJson(path.join(DEPRECATED_SCHEMA_DIR, 'apmap-1.1.schema.json'));
 
 test('both schema documents compile as JSON Schema 2020-12', () => {
   assert.equal(schema10.$schema, 'https://json-schema.org/draft/2020-12/schema');
-  assert.equal(schema11.$schema, 'https://json-schema.org/draft/2020-12/schema');
+  assert.equal(current.$schema, 'https://json-schema.org/draft/2020-12/schema');
   assert.doesNotThrow(() => compile(schema10));
-  assert.doesNotThrow(() => compile(schema11));
+  assert.doesNotThrow(() => compile(current));
 });
 
 test('the current schema declares its own $id', () => {
-  assert.equal(schema11.$id, `https://auto-pigeon.org/schemas/apmap/${currentVersion()}/apmap.schema.json`);
+  assert.equal(current.$id, `https://auto-pigeon.org/schemas/apmap/${currentVersion()}/apmap.schema.json`);
+});
+
+test('the frozen 1.1 schema is still pinned to 1.0 and 1.1', () => {
+  // 1.1's contract as it was the day it stopped being current. It accepted 1.0 and 1.1 and had no
+  // word for 1.2; if this list ever grows, the frozen copy has been edited and the record is gone.
+  assert.deepEqual(schema11.properties.apmap_version.enum, ['1.0', '1.1']);
+  assert.ok(!('groups' in schema11.properties), '1.1 never had groups; a retrofit would rewrite history');
+  assert.ok(!schema11.required.includes('groups'));
 });
 
 test('the frozen 1.0 schema is still pinned to 1.0', () => {
@@ -66,38 +78,38 @@ test('the current schema differs from the frozen one only by additions', () => {
     }
     if (JSON.stringify(before) !== JSON.stringify(after)) changes.push(`changed ${path}`);
   };
-  walk(schema10, schema11, '');
+  walk(schema10, current, '');
   assert.deepEqual(changes, [], `1.1 changed something 1.0 already defined:\n  ${changes.join('\n  ')}`);
 });
 
 test('derived_from defines exactly the five known kinds', () => {
-  const kinds = schema11.$defs.derived_from.oneOf.map((branch) => {
+  const kinds = current.$defs.derived_from.oneOf.map((branch) => {
     const def = branch.$ref.replace('#/$defs/', '');
-    return schema11.$defs[def].properties.kind.const;
+    return current.$defs[def].properties.kind.const;
   });
   assert.deepEqual(kinds.sort(), ['authored', 'operation', 'package', 'source_map', 'synthetic']);
 });
 
 test('the operation kind requires only kind and operation_id', () => {
-  assert.deepEqual(schema11.$defs.derived_from_operation.required, ['kind', 'operation_id']);
-  assert.equal(schema11.$defs.derived_from_operation.additionalProperties, false);
+  assert.deepEqual(current.$defs.derived_from_operation.required, ['kind', 'operation_id']);
+  assert.equal(current.$defs.derived_from_operation.additionalProperties, false);
 });
 
 test('intent and broken carry their intent in their descriptions', () => {
   // Both are load-bearing prose: an implementer reading only the schema must inherit them.
-  assert.match(schema11.$defs.derived_from_operation.properties.intent.description, /never authorization/i);
-  assert.match(schema11.$defs.brush_item.properties.broken.description, /warns and exports anyway/i);
-  assert.equal(schema11.$defs.brush_item.properties.broken.type, 'boolean');
-  assert.ok(!(schema11.$defs.brush_item.required ?? []).includes('broken'), 'broken must stay optional');
+  assert.match(current.$defs.derived_from_operation.properties.intent.description, /never authorization/i);
+  assert.match(current.$defs.brush_item.properties.broken.description, /warns and exports anyway/i);
+  assert.equal(current.$defs.brush_item.properties.broken.type, 'boolean');
+  assert.ok(!(current.$defs.brush_item.required ?? []).includes('broken'), 'broken must stay optional');
 });
 
-const validate11 = compile(schema11);
+const validateCurrent = compile(current);
 
-test('every valid vector is accepted by 1.1', (t) => {
+test('every valid vector is accepted by the current schema', (t) => {
   assert.ok(index.valid.length > 0);
   for (const entry of index.valid) {
     const document = vector('valid', entry.file);
-    assert.ok(validate11(document), `${entry.file} was rejected:\n  ${describeErrors(validate11.errors)}`);
+    assert.ok(validateCurrent(document), `${entry.file} was rejected:\n  ${describeErrors(validateCurrent.errors)}`);
     t.diagnostic(`accepted ${entry.file}`);
   }
 });
@@ -115,11 +127,11 @@ test('every current vector declares the current version', () => {
     assert.equal(vector('valid', entry.file).apmap_version, currentVersion(), entry.file);
 });
 
-test('every invalid vector is rejected by 1.1', () => {
+test('every invalid vector is rejected by the current schema', () => {
   assert.ok(index.invalid.length > 0);
   for (const entry of index.invalid) {
     const document = vector('invalid', entry.file);
-    assert.equal(validate11(document), false, `${entry.file} (${entry.rule}) was accepted`);
+    assert.equal(validateCurrent(document), false, `${entry.file} (${entry.rule}) was accepted`);
   }
 });
 
@@ -128,8 +140,8 @@ test('every invalid vector is rejected for the recorded reason', () => {
     const document = vector('invalid', entry.file);
     const expectation = entry.expect_fragment ?? entry.expect_document;
     const [validate, subject] = entry.expect_fragment
-      ? [compileDef(schema11, entry.expect_fragment.def), resolvePointer(document, entry.expect_fragment.pointer)]
-      : [validate11, document];
+      ? [compileDef(current, entry.expect_fragment.def), resolvePointer(document, entry.expect_fragment.pointer)]
+      : [validateCurrent, document];
     assert.equal(validate(subject), false, `${entry.file}: the fragment named in index.json is valid`);
     const matched = (validate.errors ?? []).filter((error) =>
       error.keyword === expectation.keyword
@@ -139,4 +151,68 @@ test('every invalid vector is rejected for the recorded reason', () => {
     assert.ok(matched.length > 0,
       `${entry.file} (${entry.rule}) failed, but not for ${JSON.stringify(expectation)}. Reported:\n  ${describeErrors(validate.errors)}`);
   }
+});
+
+// ---------------------------------------------------------------------------------------------
+// What 1.2 adds: groups
+// ---------------------------------------------------------------------------------------------
+
+test('a current writer must emit groups, empty or not', () => {
+  // Required, deliberately. An OPTIONAL groups member would make "this map has no groups" and
+  // "this producer has never heard of groups" the same bytes, and only one of those is safe to
+  // round-trip through a tool that drops what it does not understand.
+  assert.ok(current.required.includes('groups'));
+  assert.equal(current.properties.groups.type, 'array');
+  assert.deepEqual(current.properties.groups.items, { $ref: '#/$defs/group' });
+});
+
+test('groups sits between entities and relationships in the document order', () => {
+  // Canonical serialization order is a contract of its own: a serializer that invents another
+  // order produces documents that differ byte-wise from the same document written elsewhere.
+  const keys = Object.keys(current.properties);
+  assert.equal(keys[keys.indexOf('entities') + 1], 'groups');
+  assert.ok(keys.indexOf('groups') < keys.indexOf('relationships'));
+});
+
+test('a group is exactly group_id, name and members', () => {
+  const group = current.$defs.group;
+  assert.equal(group.additionalProperties, false);
+  assert.deepEqual(group.required, ['group_id', 'name', 'members']);
+  assert.deepEqual(Object.keys(group.properties), ['group_id', 'name', 'members']);
+});
+
+test('a group name is a bounded, non-blank label — never identity', () => {
+  const name = current.$defs.group.properties.name;
+  assert.equal(name.minLength, 1);
+  assert.equal(name.maxLength, 128);
+  // `\S` is how JSON Schema says "not blank": minLength alone accepts three spaces.
+  assert.equal(name.pattern, '\\S');
+  const validate = compileDef(current, 'group');
+  const members = [{ kind: 'brush', brush_id: 'brs_cube00000000a1' }, { kind: 'brush', brush_id: 'brs_cube00000000b2' }];
+  assert.equal(validate({ group_id: 'grp_blankname00001', name: '   ', members }), false);
+  assert.equal(validate({ group_id: 'grp_realname000001', name: 'Entrance Columns', members }), true);
+  // Identity never comes from the name: two groups may carry the same label.
+  assert.equal(current.$defs.group_id.pattern, '^grp_[0-9A-Za-z]{8,64}$');
+});
+
+test('a persisted group holds at least two distinct members', () => {
+  const validate = compileDef(current, 'group');
+  const one = { kind: 'brush', brush_id: 'brs_cube00000000a1' };
+  const two = { kind: 'brush', brush_id: 'brs_cube00000000b2' };
+  assert.equal(validate({ group_id: 'grp_one0000000001', name: 'One', members: [one] }), false, 'one member');
+  assert.equal(validate({ group_id: 'grp_dup0000000001', name: 'Dup', members: [one, one] }), false, 'duplicate');
+  assert.equal(validate({ group_id: 'grp_two0000000001', name: 'Two', members: [one, two] }), true);
+});
+
+test('a member is a discriminated union, one id field per kind', () => {
+  const validate = compileDef(current, 'group_member');
+  assert.equal(validate({ kind: 'entity', entity_id: 'ent_light000000001' }), true);
+  assert.equal(validate({ kind: 'brush', brush_id: 'brs_cube00000000a1' }), true);
+  assert.equal(validate({ kind: 'face', face_id: 'fac_00cube0000' }), true);
+  // The point of the union: a kind cannot carry another kind's id, and there is no untyped
+  // object_id to smuggle one through.
+  assert.equal(validate({ kind: 'entity', entity_id: 'brs_cube00000000a1' }), false, 'brush id under entity');
+  assert.equal(validate({ kind: 'brush', object_id: 'brs_cube00000000a1' }), false, 'untyped object_id');
+  assert.equal(validate({ kind: 'brush', brush_id: 'brs_cube00000000a1', label: 'left' }), false, 'extra member');
+  assert.equal(validate({ kind: 'group', group_id: 'grp_nested00000001' }), false, 'no group nesting');
 });

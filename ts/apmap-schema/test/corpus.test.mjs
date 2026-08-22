@@ -15,7 +15,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import { apmapFiles, compile, currentVersion, describeErrors, loadCurrentSchema, mapperRoot, readJson } from './helpers.mjs';
+import { apmapFiles, compile, currentVersion, describeErrors, loadCurrentSchema, mapperRoot, promoteToCurrent, readJson } from './helpers.mjs';
 
 const MAPPER_ROOT = mapperRoot();
 const skip = MAPPER_ROOT ? false : 'no $MAPPER_ROOT corpus reachable; set MAPPER_ROOT to run the real-document tests';
@@ -61,7 +61,10 @@ for (const [label, relative] of CORPORA) {
     for (const file of files) {
       const document = readJson(file);
       assert.equal(document.apmap_version, '1.0', `${file} is not a 1.0 document`);
-      if (!validate11(document)) rejected.push(`${path.basename(file)}:\n  ${describeErrors(validate11.errors)}`);
+      // The documented promotion, then the current contract. Before 1.2 the raw document was
+      // handed straight to the validator, because a header rewrite was the whole migration.
+      const migrated = promoteToCurrent(document);
+      if (!validate11(migrated)) rejected.push(`${path.basename(file)}:\n  ${describeErrors(validate11.errors)}`);
     }
     assert.deepEqual(rejected, [],
       `the current schema cannot express real documents, so migration to ${currentVersion()} is not mechanical:\n${rejected.join('\n')}`);
