@@ -9,7 +9,8 @@
   checker implements, and the current contract inherits them unchanged. The title says 1.0 because
   that is the version the document was written for and 1.0 is frozen; 1.1 adds one `derived_from`
   kind and one optional brush member and changes nothing here; 1.2 adds `groups`, specified in §9a
-  with its own SCH-G-* and SEM-G-* rules.
+  with its own SCH-G-* and SEM-G-* rules; 1.3 adds the optional `group.source`, specified in the
+  same section.
 
   It was published at $MAPPER_ROOT/formats/apmap/1.0/README.md until this repository became the
   authority, so that a public clone can read the normative rule catalogue without a data root.
@@ -528,6 +529,62 @@ brush  + one of its faces          ->  keep the brush
 Both spellings would name the same geometry twice, and the member count — which
 a user reads — would stop meaning anything.
 
+### `source` — where the group came from
+
+Added by 1.3. **Optional**, and the only member of a group that is not about
+this document's own objects:
+
+```json
+{
+  "group_id": "grp_entrance00001",
+  "name": "Entrance Columns",
+  "members": [ ],
+  "source": { "kind": "prefab", "prefab_id": "user/qk3m2p9x7v1a0zt/9f2c41ab7d0e6538" }
+}
+```
+
+It is **historical origin, not a live binding**. `source.kind: prefab` with
+`source.prefab_id: X` means exactly one thing:
+
+```text
+this group was created by placing prefab X
+```
+
+It does **not** mean the geometry still equals X, that later edits to X reach
+this group, that edits here reach X, or that deleting X from a library deletes
+or invalidates this group. Everything else follows from that reading:
+
+| what happens | what happens to `source` |
+| --- | --- |
+| the group is renamed | preserved |
+| a member is added or removed | preserved |
+| the contained geometry is moved, rotated, retextured | preserved |
+| the whole group is cloned, copied or imported | preserved, under a **fresh** `group_id` |
+| a *subset* of members is copied | no group is created, so no `source` |
+| the group is ungrouped | gone with the group |
+| a group is created from a selection | absent |
+
+`prefab_id` is an **external** identity — the prefab library's, not this
+document's. It carries no APMap id prefix, nothing in this document declares it,
+`SEM-G-1` does not apply to it, and it is **never reminted** when the document's
+own ids are: that is what makes a cloned group still remember the same prefab.
+The contract bounds it (1–128 characters) and imposes no pattern, because the
+shape belongs to whichever library issues it.
+
+**The identity is all that is stored.** No screenshot bytes, no image URL, no
+host, no title, no owner, no revision, no extraction job id. Those are the
+library's, and the library can revoke, replace or re-render them; a copy here
+would be a stale, unauthenticated second source of truth for somebody else's
+asset. A consumer resolves the picture from `prefab_id` at the moment it draws,
+and when it cannot — the prefab was deleted, or belongs to an account this
+reader cannot see — the provenance still stands and the picture is simply
+absent. `additionalProperties: false` is what enforces that, and a producer that
+wants to add one more field is proposing a schema change.
+
+`kind` is a closed constant rather than an open string for the same reason a
+`derived_from` kind is: a consumer meeting an unknown origin could only guess
+what the group's history was.
+
 ## 10. Rules enforced by JSON Schema
 
 | id | rule |
@@ -551,12 +608,20 @@ Added by 1.2, alongside `groups` (§9a):
 
 | id | rule |
 | --- | --- |
-| SCH-G-1 | `groups` is required and is an array; a 1.2 writer always emits it, empty or not |
-| SCH-G-2 | a group requires exactly `group_id`, `name`, `members`; it is closed |
+| SCH-G-1 | `groups` is required and is an array; a current writer always emits it, empty or not |
+| SCH-G-2 | a group requires `group_id`, `name`, `members`; it is closed |
 | SCH-G-3 | `group_id` matches `^grp_[0-9A-Za-z]{8,64}$` |
 | SCH-G-4 | `name` is 1–128 characters and contains at least one non-whitespace character |
 | SCH-G-5 | `members` has at least 2 items and no duplicates |
 | SCH-G-6 | a member is one of `entity`/`brush`/`face`, each closed and carrying only its own kind's id field |
+
+Added by 1.3, for `group.source` (§9a):
+
+| id | rule |
+| --- | --- |
+| SCH-G-7 | `source` is optional; a group that omits it has no recorded origin, which is not an error |
+| SCH-G-8 | `source` requires `kind` and `prefab_id`, and is closed — no screenshot, URL, title, owner or job id |
+| SCH-G-9 | `kind` is `const "prefab"`; `prefab_id` is a string of 1–128 characters, with no imposed pattern |
 
 ## 11. Semantic validation rules
 
@@ -591,6 +656,7 @@ is a statement about the rest of the document:
 | SEM-G-4 | no object is a direct member of two groups |
 | SEM-G-5 | direct membership holds no ancestor/descendant pair (§9a, containment normalization) |
 | SEM-G-6 | a persisted group has at least two members; an editor dissolves one that falls below, in the same transaction that took the member away |
+| SEM-G-7 | `source.prefab_id` is an EXTERNAL identity: SEM-G-1 does not apply to it, it is never reminted with the document's own ids, and an unresolvable one is not a document fault |
 
 A current-format document with a dangling group member is **invalid**. When an
 edit deletes a member object, group membership is updated in the *same* map
@@ -607,7 +673,7 @@ Two producers given the same document must emit the same bytes.
 | SER-2 | LF line endings only |
 | SER-3 | two-space indentation |
 | SER-4 | exactly one trailing newline at end of file |
-| SER-5 | object members in the order this specification declares them — `groups` sits between `entities` and `relationships` |
+| SER-5 | object members in the order this specification declares them — `groups` sits between `entities` and `relationships`, and a group is `group_id`, `name`, `members`, `source` |
 | SER-6 | arrays in **semantic** order — entity, content, face and relationship order is meaningful and is never sorted |
 | SER-7 | numbers are finite; a value that is mathematically an integer is emitted as a JSON integer; other values are rounded to 6 decimal places; `-0` is emitted as `0`; no exponent notation |
 | SER-8 | a document that must be reproducible carries no wall-clock timestamp. `provenance.generated_at` is permitted but forfeits byte determinism |
@@ -630,6 +696,7 @@ migration.
 apmap/1.0/apmap.schema.json
 apmap/1.1/apmap.schema.json
 apmap/1.2/apmap.schema.json
+apmap/1.3/apmap.schema.json
 apmap/2.0/apmap.schema.json
 ```
 
@@ -648,7 +715,12 @@ apmap/2.0/apmap.schema.json
 - **Promotion** of a legacy document to the current contract rewrites the
   declared version and supplies the structural defaults the current contract
   requires — today exactly one, `groups: []`. It rebuilds no geometry, remints
-  no id and rewrites no provenance, which is what makes it mechanical.
+  no id and rewrites no provenance, which is what makes it mechanical. It also
+  **invents nothing**: 1.3's `group.source` is optional, so a promoted 1.2 group
+  keeps its id, its name and its members and records no origin, because none was
+  ever recorded. A minor version that needed a *value* rather than a structural
+  default would not be promotable this way, and that is the constraint on adding
+  one.
 
 ## 14. `.map` import and export loss boundaries
 

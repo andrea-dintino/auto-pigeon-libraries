@@ -23,6 +23,8 @@ const schema10 = readJson(deprecatedSchemaPath());
 const index = vectorIndex();
 /** The frozen 1.1 schema. It moved into `deprecated/` when 1.2 was promoted; it was not edited. */
 const schema11 = readJson(path.join(DEPRECATED_SCHEMA_DIR, 'apmap-1.1.schema.json'));
+/** The frozen 1.2 schema, moved down the day 1.3 was promoted. Also not edited. */
+const schema12 = readJson(path.join(DEPRECATED_SCHEMA_DIR, 'apmap-1.2.schema.json'));
 
 test('both schema documents compile as JSON Schema 2020-12', () => {
   assert.equal(schema10.$schema, 'https://json-schema.org/draft/2020-12/schema');
@@ -41,6 +43,28 @@ test('the frozen 1.1 schema is still pinned to 1.0 and 1.1', () => {
   assert.deepEqual(schema11.properties.apmap_version.enum, ['1.0', '1.1']);
   assert.ok(!('groups' in schema11.properties), '1.1 never had groups; a retrofit would rewrite history');
   assert.ok(!schema11.required.includes('groups'));
+});
+
+test('the frozen 1.2 schema is still pinned to 1.0, 1.1 and 1.2', () => {
+  // 1.2's contract as it was the day it stopped being current. It had no word for 1.3, and its
+  // group object was closed over exactly three members; if either changes, the frozen copy has
+  // been edited and the record of what 1.2 said is gone.
+  assert.deepEqual(schema12.properties.apmap_version.enum, ['1.0', '1.1', '1.2']);
+  assert.deepEqual(Object.keys(schema12.$defs.group.properties), ['group_id', 'name', 'members']);
+  assert.ok(!('group_source' in schema12.$defs), '1.2 never had group provenance');
+});
+
+test('the frozen 1.2 schema refuses the member 1.3 added', () => {
+  // The other half of version-matched validation, as a fact rather than a policy statement: a
+  // document carrying `group.source` is NOT a 1.2 document, and the 1.2 contract says so. Were it
+  // silently accepted, a mislabelled 1.3 document would pass a check it never claimed to meet.
+  const sourced = vector('valid', 'group-from-prefab.apmap');
+  assert.equal(compile(schema12)(sourced), false);
+  // And it refuses it for the right reason: an undeclared member on a closed object.
+  const group = compileDef(schema12, 'group');
+  assert.equal(group(sourced.groups[0]), false);
+  assert.ok((group.errors ?? []).some((error) =>
+    error.keyword === 'additionalProperties' && error.params.additionalProperty === 'source'));
 });
 
 test('the frozen 1.0 schema is still pinned to 1.0', () => {
@@ -154,7 +178,7 @@ test('every invalid vector is rejected for the recorded reason', () => {
 });
 
 // ---------------------------------------------------------------------------------------------
-// What 1.2 adds: groups
+// What 1.2 added: groups
 // ---------------------------------------------------------------------------------------------
 
 test('a current writer must emit groups, empty or not', () => {
@@ -174,11 +198,11 @@ test('groups sits between entities and relationships in the document order', () 
   assert.ok(keys.indexOf('groups') < keys.indexOf('relationships'));
 });
 
-test('a group is exactly group_id, name and members', () => {
+test('a group is group_id, name, members and nothing but an optional source', () => {
   const group = current.$defs.group;
   assert.equal(group.additionalProperties, false);
   assert.deepEqual(group.required, ['group_id', 'name', 'members']);
-  assert.deepEqual(Object.keys(group.properties), ['group_id', 'name', 'members']);
+  assert.deepEqual(Object.keys(group.properties), ['group_id', 'name', 'members', 'source']);
 });
 
 test('a group name is a bounded, non-blank label — never identity', () => {
@@ -215,4 +239,71 @@ test('a member is a discriminated union, one id field per kind', () => {
   assert.equal(validate({ kind: 'brush', object_id: 'brs_cube00000000a1' }), false, 'untyped object_id');
   assert.equal(validate({ kind: 'brush', brush_id: 'brs_cube00000000a1', label: 'left' }), false, 'extra member');
   assert.equal(validate({ kind: 'group', group_id: 'grp_nested00000001' }), false, 'no group nesting');
+});
+
+// ---------------------------------------------------------------------------------------------
+// What 1.3 adds: where a group came from
+// ---------------------------------------------------------------------------------------------
+
+test('a group source is optional, so promoting a 1.2 document invents nothing', () => {
+  // The whole reason the member is optional. A 1.2 group has no origin recorded, and the only
+  // truthful promotion of "no origin recorded" is to say nothing — not to guess one, and not to
+  // write a null that a reader would have to learn to disbelieve.
+  assert.ok(!current.$defs.group.required.includes('source'));
+  const validate = compileDef(current, 'group');
+  const members = [{ kind: 'brush', brush_id: 'brs_cube00000000a1' }, { kind: 'brush', brush_id: 'brs_cube00000000b2' }];
+  assert.equal(validate({ group_id: 'grp_nosource000001', name: 'Hand made', members }), true);
+});
+
+test('a group source is a closed prefab reference and nothing else', () => {
+  const source = current.$defs.group_source;
+  assert.equal(source.additionalProperties, false);
+  assert.deepEqual(source.required, ['kind', 'prefab_id']);
+  assert.deepEqual(Object.keys(source.properties), ['kind', 'prefab_id']);
+  assert.equal(source.properties.kind.const, 'prefab');
+  assert.equal(source.properties.prefab_id.type, 'string');
+  assert.equal(source.properties.prefab_id.minLength, 1);
+});
+
+test('a group source records identity, never the prefab library asset', () => {
+  // The policy, as a test rather than a paragraph: what may go in is one id. A screenshot URL, the
+  // prefab's title, its owner, its revision — all of them are the library's, all of them go stale,
+  // and a copy in the map would be an unauthenticated second source of truth for somebody else's
+  // asset. `additionalProperties: false` is what enforces it; this names the members it enforces
+  // it against, so a later "just one more field" has to argue with a test.
+  const validate = compileDef(current, 'group_source');
+  const good = { kind: 'prefab', prefab_id: 'user/qk3m2p9x7v1a0zt/9f2c41ab7d0e6538' };
+  assert.equal(validate(good), true);
+  for (const extra of ['preview_image_url', 'screenshot', 'title', 'name', 'owner',
+                       'package_revision', 'candidate_id', 'job_id'])
+    assert.equal(validate({ ...good, [extra]: 'x' }), false, `${extra} was accepted into group.source`);
+});
+
+test('a group source names a prefab that can actually be named', () => {
+  const validate = compileDef(current, 'group_source');
+  // Empty provenance is worse than none: it claims an origin no reader can ever resolve.
+  assert.equal(validate({ kind: 'prefab', prefab_id: '' }), false, 'empty prefab_id');
+  assert.equal(validate({ kind: 'prefab' }), false, 'no prefab_id at all');
+  // A new kind of origin is a schema change, never a producer's invention.
+  assert.equal(validate({ kind: 'annotation', prefab_id: 'x' }), false, 'unknown kind');
+  assert.equal(validate({ prefab_id: 'x' }), false, 'no kind');
+  // The identity is the LIBRARY's, so the format imposes no shape on it beyond bounded and
+  // non-empty. AUB's user prefabs are `user/<owner>/<digest>` — slashes and all — and an APMap
+  // id pattern here would refuse a legal reference.
+  assert.equal(validate({ kind: 'prefab', prefab_id: 'user/qk3m2p9x7v1a0zt/9f2c41ab7d0e6538' }), true);
+  assert.equal(validate({ kind: 'prefab', prefab_id: 'x'.repeat(128) }), true);
+  assert.equal(validate({ kind: 'prefab', prefab_id: 'x'.repeat(129) }), false, 'unbounded prefab_id');
+});
+
+test('source is not identity: two groups may share one, and it never becomes a member', () => {
+  // Provenance is historical, so two placements of the same prefab produce two groups that both
+  // remember it. Nothing dedupes on it, nothing resolves it against this document, and it is not
+  // an object id — which is why it carries no APMap prefix and is not in `group_member` at all.
+  const validate = compile(current);
+  const document = vector('valid', 'group-from-prefab.apmap');
+  const twice = { ...document, groups: [document.groups[0],
+    { ...document.groups[0], group_id: 'grp_secondplacing1' }] };
+  assert.ok(validate(twice), `two groups from one prefab were rejected:\n  ${describeErrors(validate.errors)}`);
+  const member = compileDef(current, 'group_member');
+  assert.equal(member({ kind: 'prefab', prefab_id: 'user/x/y' }), false, 'source is not a member kind');
 });

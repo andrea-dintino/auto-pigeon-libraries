@@ -7,19 +7,22 @@ Auto-Pigeon, and the collaboration service.
 validator are a separate package.
 
 ```text
-1.2 = current READ + WRITE contract
+1.3 = current READ + WRITE contract
+1.2 = deprecated legacy READ contract
 1.1 = deprecated legacy READ contract
 1.0 = deprecated legacy READ contract
 ```
 
 ```text
-schema/apmap-1.2.schema.json              THE current contract — exactly one file lives here
+schema/apmap-1.3.schema.json              THE current contract — exactly one file lives here
+schema/deprecated/apmap-1.2.schema.json   a supported LEGACY READ contract — never written
 schema/deprecated/apmap-1.1.schema.json   a supported LEGACY READ contract — never written
 schema/deprecated/apmap-1.0.schema.json   a supported LEGACY READ contract — never written
 SEMANTICS.md                              the normative specification, SCH-* and SEM-* rules
 test-vectors/                             conformance vectors for the CURRENT contract
 deprecated/1.0/                           the published 1.0 corpus and examples
 deprecated/1.1/                           the published 1.1 corpus
+deprecated/1.2/                           the published 1.2 corpus
 workspace/ (repository root)              the canonical workspace manifest
 ```
 
@@ -32,7 +35,7 @@ VALIDATE    with the schema matching the document being read
 WIRE/COLLAB current only
 ```
 
-Today that resolves to: read 1.0, 1.1 and 1.2, write 1.2.
+Today that resolves to: read 1.0, 1.1, 1.2 and 1.3, write 1.3.
 
 **It is not a compatibility matrix.** Nothing here, and nothing in any consumer, maintains a list of
 supported versions. The directory layout IS the policy, and every service derives both halves of it
@@ -45,8 +48,9 @@ each schema/deprecated/apmap-*.schema.json  LEGACY  — readable, never written
 
 Depth is the whole mechanism. The current-schema scan reads **direct children only**, so a
 deprecated contract can never be mistaken for the writer's; a reader that wants backward
-compatibility enumerates `deprecated/` deliberately. Promoting 1.2 is one file rename and one file
-move.
+compatibility enumerates `deprecated/` deliberately. Promoting a version is one file rename and one
+file move — plus repointing this package's `exports`, which is the one place a filename is still
+typed and which `contract-integrity.test.mjs` fails on if it is forgotten.
 
 `deprecated` means **"not current / never written"**, not "unreadable". A format that becomes
 genuinely unreadable does not stay here — it moves out of the readable tree into an explicitly
@@ -81,18 +85,56 @@ evidence for this repository's own tests. It is not shipped and is not a runtime
 
 Each version was built **additively** from the one before, and `test/schema.test.mjs` walks the
 documents and fails if that stops being true. 1.1 added one `derived_from` kind (`operation`) and
-one optional brush member (`broken`). 1.2 adds `groups`.
+one optional brush member (`broken`). 1.2 added `groups`. 1.3 adds one optional group member,
+`source`.
 
 That matters for exactly one reason: **promotion is mechanical**. A legacy document becomes a
 current one by rewriting the declared version and supplying the structural defaults the current
 contract requires — today exactly one, `groups: []`. No geometry is rebuilt, no id reminted, no
-provenance rewritten. `test/helpers.mjs` holds that promotion in one place as `promoteToCurrent`;
+provenance rewritten, and nothing is invented: 1.3's `source` is optional, so a promoted group
+carries no origin because it never had one recorded. `test/helpers.mjs` holds that promotion in one
+place as `promoteToCurrent`;
 `test/deprecated-history.test.mjs` proves it over the whole published 1.0 corpus, and
 `test/corpus.test.mjs` over the generated corpora when they are mounted. That is what lets a
 consumer open a legacy document, promote it in memory, and write current bytes without a migration
 wizard or a lossy conversion.
 
-## What 1.2 adds
+## What 1.3 adds
+
+### `group.source` — where a group came from
+
+```json
+{
+  "group_id": "grp_entrance00001",
+  "name": "Entrance Columns",
+  "members": [ ],
+  "source": { "kind": "prefab", "prefab_id": "user/qk3m2p9x7v1a0zt/9f2c41ab7d0e6538" }
+}
+```
+
+Optional, and **historical origin rather than a live binding**. It records that this group was
+created by placing that prefab. It does not say the geometry still matches it, it does not track
+later edits on either side, and deleting the prefab from a library neither deletes the group nor
+falsifies the record. So an ordinary edit — rename, add a member, move the geometry — keeps it, and
+copying the whole group keeps it too under a fresh `group_id`, because the copy has the same
+history. A group made any other way simply omits the member.
+
+**Only the identity is stored.** No screenshot bytes, no image URL, no host, no title, no owner, no
+revision, no extraction job. Those belong to the prefab library, which owns the asset, can revoke
+access to it and can re-render it; a copy in the map would be a stale, unauthenticated second
+source of truth. A consumer resolves the picture from `prefab_id` at runtime, and when it cannot —
+the prefab was deleted, or lives in an account this reader cannot see — the provenance still stands
+and the picture is simply absent. `additionalProperties: false` is what keeps the asset out, and
+`test/schema.test.mjs` names the members it keeps out so a later "just one more field" has to argue
+with a test.
+
+`prefab_id` is an **external** reference: the library's identity, not a map object id. It carries
+no APMap prefix, nothing in the document declares it, and it is never reminted when the document's
+own ids are — a clone of a sourced group gets a new `group_id` and the *same* `prefab_id`. AUB's
+user prefabs are `user/<owner>/<digest>`, slashes included, which is why the contract bounds the
+string and imposes no pattern on it.
+
+## What 1.2 added
 
 ### `groups` — named, persistent selection sets
 
@@ -116,13 +158,14 @@ A group is a name over a set of objects the document already declares:
 It owns no geometry, so it is cheap: deleting a group deletes nothing but the grouping. It is
 **map working state**, which is the whole reason it is here rather than in a sidecar — it is saved
 with the document, undone with the document, and seen by every collaborator, and none of those are
-true of a record kept beside the map.
+true of a record kept beside the map. That argument is also what produced 1.3: `group.source` lived
+in browser memory for exactly one release, and it did not survive a reload.
 
-`groups` is **required of a 1.2 writer**, empty array included. An optional member would make "this
-map has no groups" and "this producer has never heard of groups" the same bytes.
+`groups` is **required of a current writer**, empty array included. An optional member would make
+"this map has no groups" and "this producer has never heard of groups" the same bytes.
 
 `SEMANTICS.md` §9a is the normative account: the discriminated member union, the two-member
-minimum, containment normalization, and the SCH-G-*/SEM-G-* rules.
+minimum, containment normalization, `source`, and the SCH-G-*/SEM-G-* rules.
 
 ## What 1.1 added
 
