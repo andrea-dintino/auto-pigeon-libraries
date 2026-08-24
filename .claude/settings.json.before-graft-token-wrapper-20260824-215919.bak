@@ -1,7 +1,7 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline-with-tokens.cjs\""
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
   },
   "subagentStatusLine": {
     "type": "command",
