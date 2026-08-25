@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/auto-pigeon/auto-pigeon-libraries/ts/health-contract/schema/version-response.schema.json",
+  "title": "Auto-Pigeon /version response",
+  "description": "The unauthenticated build-identity document every long-lived Auto-Pigeon HTTP service serves at GET /version. It answers exactly one question — which build is this — and deliberately nothing else: no filesystem path, no environment, no configuration, no dependency inventory, no branch. Those are the fields a version endpoint accumulates when it is allowed to become a diagnostics endpoint, and each of them is something an unauthenticated caller learns about a deployment it does not own.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "component",
+    "version",
+    "commit_count"
+  ],
+  "properties": {
+    "component": {
+      "type": "string",
+      "description": "The component's repository name, e.g. \"auto-pigeon-backend\". The repository name rather than the alias, because it is the identifier the workspace manifest, the compose projects and the container names all already use.",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "version": {
+      "type": "string",
+      "description": "The human-facing version, \"1.<commit-count>\", or \"unknown\" when no version was injected into this process. Never a commit hash, never a timestamp, never a package manager's placeholder.",
+      "pattern": "^1\\.[0-9]+$|^unknown$"
+    },
+    "commit_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "`git rev-list --count HEAD` at build time — the number the version is made of, offered separately so a caller comparing two builds can subtract rather than parse. Null when the version is unknown.",
+      "minimum": 0
+    },
+    "commit_hash": {
+      "type": "string",
+      "description": "Optional diagnostic metadata. It NEVER replaces the version and is never what a user is shown: a hash cannot be said out loud, cannot be compared for recency, and is not what the version format was frozen as. Empty when not injected."
+    },
+    "dirty": {
+      "type": "boolean",
+      "description": "Whether the working tree the build came from had uncommitted changes. Separate metadata, never folded into `version` — \"1.842-dirty\" would be a second version string for one commit and would break comparison. Expected true in development and false in a production build."
+    },
+    "instance": {
+      "type": "string",
+      "description": "Optional instance identity, for a component that runs as more than one process from one build. AUC sets it to its Colyseus instance id, which is what makes two instances of the same version distinguishable on the dashboard."
+    }
+  }
+}

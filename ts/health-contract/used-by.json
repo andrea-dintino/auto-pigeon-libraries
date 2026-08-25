@@ -1,0 +1,30 @@
+{
+  "package": "ts/health-contract",
+  "consumers": [
+    {
+      "repo": "auto-pigeon-tools",
+      "usage": "Generates each stack's Gatus configuration from this package's gatus/base.yaml plus the endpoints its own port/origin resolver produced, and validates every component's /version and /healthz response against these schemas in its integration tests.",
+      "added": "2026-08-25"
+    },
+    {
+      "repo": "auto-pigeon",
+      "usage": "Its backend serves /version and /healthz in this shape, and /api/status carries the same version.",
+      "added": "2026-08-25"
+    },
+    {
+      "repo": "auto-pigeon-backend",
+      "usage": "Serves /version and /healthz in this shape; /healthz additionally reports its own database readiness and the AUE image version its scheduler is configured with.",
+      "added": "2026-08-25"
+    },
+    {
+      "repo": "auto-pigeon-collaboration",
+      "usage": "Serves /version and /healthz in this shape, with the instance field carrying its Colyseus instance id so two instances of one build are distinguishable.",
+      "added": "2026-08-25"
+    },
+    {
+      "repo": "auto-pigeon-gallery",
+      "usage": "Its static-serving binary answers /version and /healthz in this shape, and the built frontend shows the same version in its footer.",
+      "added": "2026-08-25"
+    }
+  ]
+}

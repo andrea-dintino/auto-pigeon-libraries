@@ -1,0 +1,25 @@
+{
+  "name": "@auto-pigeon/health-contract",
+  "version": "1.0.0",
+  "description": "The cross-stack /version and /healthz contracts every long-lived Auto-Pigeon service answers, and the topology-independent Gatus base configuration. Schemas and a static template only — no runtime code, and no running service.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "schema",
+    "gatus",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./schema/version-response.schema.json",
+    "./version": "./schema/version-response.schema.json",
+    "./healthz": "./schema/healthz-response.schema.json",
+    "./gatus/base.yaml": "./gatus/base.yaml",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0"
+  }
+}

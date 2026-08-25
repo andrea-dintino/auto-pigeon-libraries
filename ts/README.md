@@ -5,6 +5,7 @@ One folder per package.
 | package | what it is |
 | --- | --- |
 | [`apmap-schema/`](apmap-schema/) | the canonical APMap JSON Schema (1.1, and 1.0 frozen) and its conformance vectors. Schema and tests only, no runtime code. |
+| [`health-contract/`](health-contract/) | the cross-stack `/version` and `/healthz` schemas, and the topology-independent Gatus base configuration. Schemas and one static template, no runtime code. |
 
 The APMap reader/writer/validator library is the next to land here, and consumes
 `apmap-schema` rather than embedding a copy of it.

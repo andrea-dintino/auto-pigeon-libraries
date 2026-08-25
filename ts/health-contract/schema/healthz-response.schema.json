@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/auto-pigeon/auto-pigeon-libraries/ts/health-contract/schema/healthz-response.schema.json",
+  "title": "Auto-Pigeon /healthz response",
+  "description": "The unauthenticated liveness document every long-lived Auto-Pigeon HTTP service serves at GET /healthz. It carries the component's identity AND its version, which is what lets one monitor probe answer both \"is it up\" and \"is it the build we deployed\" in a single cheap request — and is why the stale-version check needs no custom code anywhere. A health check must be cheap and bounded: no database dump, no downstream cascade, no secrets, no paths.",
+  "type": "object",
+  "required": [
+    "status",
+    "component",
+    "version"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "description": "\"ok\" when this process is alive and serving. Liveness only — readiness, where a component has a meaningful one distinct from liveness, is /readyz or the component's own existing readiness route.",
+      "enum": [
+        "ok",
+        "degraded"
+      ]
+    },
+    "component": {
+      "type": "string",
+      "description": "The component's repository name, matching /version's.",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "version": {
+      "type": "string",
+      "description": "The same string /version reports. The monitor compares it to the version the launcher expected, so a component still running an older build fails its check instead of quietly serving one.",
+      "pattern": "^1\\.[0-9]+$|^unknown$"
+    },
+    "instance": {
+      "type": "string",
+      "description": "Optional instance identity, for a component running as more than one process from one build."
+    }
+  },
+  "additionalProperties": true,
+  "$comment": "additionalProperties is true here and false on /version, deliberately. /version is a closed identity document. /healthz is where a component reports the one or two facts only it can know about its own readiness — AUB's database, AUB's AUE scheduler — and closing it would mean either a schema change per component or four components with no way to say anything true. What stays forbidden is what the description says: secrets, paths, environment, and anything expensive to compute."
+}

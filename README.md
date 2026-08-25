@@ -41,9 +41,25 @@ which names the repositories that consume it and validates against
 | package | what it is |
 | --- | --- |
 | [`ts/apmap-schema`](ts/apmap-schema/) | the canonical APMap contract. **1.1 = current READ + WRITE contract; 1.0 = deprecated legacy READ contract.** Exactly one current schema, the legacy contracts beside it under `schema/deprecated/`, the normative `SEMANTICS.md`, and the conformance vectors. Contract material only, no runtime code. |
+| [`ts/health-contract`](ts/health-contract/) | the cross-stack `/version` and `/healthz` contracts every long-lived Auto-Pigeon service answers, and the topology-independent base configuration for the stack's Gatus health monitor. Schemas and one static template, no runtime code. |
 
 The TypeScript APMap reader/writer/validator is next; it will consume
 `apmap-schema` rather than carry its own copy.
+
+## This repository's own version
+
+AULIBS is not a service, so it has no `/version` endpoint to add and none may be added — there is
+no server here to serve one from. Its version is the same `1.<commit-count>` every Auto-Pigeon
+component uses (`git rev-list --count HEAD`), and it is published the two ways a library can:
+
+- `auto-pigeon-tools` prints it in the VERSIONS manifest every launch emits, and shows it on the
+  stack's health dashboard;
+- the APMap contract bundle staged into each service image records it in
+  `apmap-contract-provenance.json` as `aulibs_version`, beside the `aulibs_commit` it was staged
+  from. The commit is the reproducible identifier; the version is the readable one, and neither
+  replaces the other.
+
+See [`ts/health-contract`](ts/health-contract/) for the format and the reasoning.
 
 ## Running the tests
 
