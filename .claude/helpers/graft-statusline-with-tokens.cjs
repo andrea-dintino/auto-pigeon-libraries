@@ -42,10 +42,6 @@ const graftOutput = typeof graft.stdout === 'string'
   ? graft.stdout.trimEnd()
   : '';
 
-if (graftOutput) {
-  process.stdout.write(`${graftOutput}\n`);
-}
-
 const context = data?.context_window ?? {};
 const usage = context.current_usage ?? {};
 
@@ -62,6 +58,15 @@ const outputTokens = Number.isFinite(context.total_output_tokens)
 const formatTokens = (value) =>
   Math.max(0, Number(value) || 0).toLocaleString('en-US');
 
-process.stdout.write(
-  `▸ in ${formatTokens(inputTokens)} tok · out ${formatTokens(outputTokens)} tok`,
-);
+const tokenOutput =
+  `in ${formatTokens(inputTokens)} tok · out ${formatTokens(outputTokens)} tok`;
+
+if (graftOutput) {
+  // Keep Graft's original row count. Appending a third row can push its first
+  // row — which contains "~N tok saved" — out of a constrained terminal footer.
+  const lines = graftOutput.split(/\r?\n/);
+  lines[lines.length - 1] = `${lines[lines.length - 1]} · ${tokenOutput}`;
+  process.stdout.write(lines.join('\n'));
+} else {
+  process.stdout.write(`▸ ${tokenOutput}`);
+}
