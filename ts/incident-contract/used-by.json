@@ -10,6 +10,11 @@
       "repo": "auto-pigeon",
       "usage": "The editor's whole incident subsystem is built on it (OBS-02). services/incidents.ts uses createIncident, redactValue, validateIncident, newCorrelationId/isCorrelationId and the schema version; services/incidentTransport.ts uses toSentryEvent to POST to the self-hosted GlitchTip's store endpoint, with no Sentry SDK; services/bugReport.ts uses toDiagnosticText, redactText and BUG_REPORT_URL for the sanitised report and the prefilled public issue; services/api.ts puts CORRELATION_HEADER on every outbound request. The incident CODES are read from the taxonomy rather than restated: render.*, editor.*, aub.*, auc.*, aue.* and reporting.telemetry_unavailable are all used as written there.",
       "added": "2026-08-26"
+    },
+    {
+      "repo": "auto-pigeon-backend",
+      "usage": "OBS-03. internal/incident/contract/ holds BYTE-FOR-BYTE copies of schema/incident-codes.json, schema/redaction-rules.json and schema/incident-envelope-1.0.schema.json, embedded with go:embed so the container image builds with no sibling checkout; TestEmbeddedContractIsExactlyAULIBS compares each against this package and fails the build on drift (it skips, loudly, when no sibling checkout is present). internal/incident implements the envelope, on-demand validation, the taxonomy lookup and the three kinds of redaction rule as READERS of that data rather than as transcriptions, and asserts that every value pattern compiles unchanged in Go's RE2. internal/correlation implements the correlation convention: header X-Auto-Pigeon-Correlation-Id, 32 lowercase hex, malformed treated as absent and never forwarded, and the correlation_id column AUB stores on the AUE job so AUE inherits it. Codes used as written here: aub.error, aue.unavailable, aue.timeout, auc.disconnected, auc.error, reporting.telemetry_unavailable. No package code was changed by AUB; this file is the only write.",
+      "added": "2026-08-26"
     }
   ]
 }
