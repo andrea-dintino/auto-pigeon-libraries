@@ -102,6 +102,7 @@ export function isDeniedKey(key: string): boolean;
 export function validateIncident(incident: unknown): ValidationResult;
 
 export function newIncidentId(): string;
+export function newTransportEventId(): string;
 export function formatOccurredAt(when?: Date | string | number): string;
 export function createIncident(fields: IncidentDraft): Incident;
 export function toSentryEvent(incident: Incident, options?: SentryEventOptions): Record<string, unknown>;

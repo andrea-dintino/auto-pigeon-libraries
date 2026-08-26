@@ -55,6 +55,50 @@ schema version, an id, a timestamp. It invents **no** component, **no** severity
 a made-up release is the placeholder-version failure PREPROD-05 settled, and `"unknown"` is a legal,
 meaningful value here.
 
+## Two identities: the incident, and the transmission
+
+An incident has **two** ids and they answer different questions.
+
+| | | |
+| --- | --- | --- |
+| `incident_id` | one FAULT, in the product's terms | **stable** for the whole lifecycle of that fault — every rung of an escalation, and its recovery |
+| `event_id` | one TRANSMISSION to the error backend | **fresh on every `toSentryEvent` call**, minted by `newTransportEventId()` |
+
+They were the same value until INC-01, and that quietly cost the product most of what it reported.
+GlitchTip's store endpoint answers **HTTP 422 `Duplicate event id`** to the second event carrying an
+id it already holds, so a stall that escalated 3 s → 10 s → 30 s → recovered delivered its *first*
+rung and had the other three refused at the door; OBS-07 measured 22 rejected sends in a single
+stage. The stable id was doing its job perfectly — one row in the buffer, one card on screen, one
+thing to talk about — and that is precisely why it could not also be the transport id.
+
+Nothing about the incident changed. The stable id still travels on every event, twice:
+
+```js
+const event = toSentryEvent(incident);
+event.event_id                        // fresh, different on the next call
+event.tags.incident_id                // the stable one — SEARCHABLE in GlitchTip
+event.contexts.incident.incident_id   // the stable one — in the closed, bounded block
+```
+
+The tag is the half a person queries (`incident_id:<32 hex>` finds every rung of one stall); the
+context is the half the closed schema bounds. Both are safe to publish for the same reason the
+correlation id is: 128 random bits encoding nothing.
+
+`newTransportEventId()` mints a **version-4 UUID as 32 lowercase hex characters, no dashes** —
+Sentry's documented shape for the field. Today's GlitchTip would accept any 32 hex characters, which
+is why the old code worked at all; satisfying the documented contract rather than one server
+version's tolerance is what survives an upgrade. It uses `crypto.getRandomValues` and never
+`crypto.randomUUID`, which exists only in a secure context — AUP is served over plain HTTP on a LAN.
+
+### One fault is one issue
+
+`toSentryEvent` also sets `fingerprint: [component, code, subsystem, operation]`. Once repeated
+transmissions stop being rejected, the rungs of one stall are events whose *messages* differ
+("after 3 seconds", "after 10 seconds"), and default grouping would file them as unrelated issues —
+trading a rejected send for a scattered one. Grouping on what the fault *is* is what AUB's and AUE's
+Go reporters have always done; this is the line that makes the three lanes agree. Deliberately not
+the message: a message carrying a duration or a map name groups every occurrence separately.
+
 ## The correlation id
 
 **128 random bits, 32 lowercase hex characters**, minted where a *person* does something and then
@@ -142,7 +186,7 @@ ts/incident-contract/
 │   ├── correlation.mjs  the correlation-id convention
 │   ├── redact.mjs       central redaction
 │   ├── validate.mjs     on-demand validation
-│   └── envelope.mjs     createIncident, toSentryEvent, toDiagnosticText
+│   └── envelope.mjs     createIncident, toSentryEvent, toDiagnosticText, transport ids
 └── test/
     ├── contract.test.mjs   schema, taxonomy, correlation, ajv parity
     └── redaction.test.mjs  fake secrets in, nothing out

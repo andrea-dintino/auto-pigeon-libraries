@@ -1,6 +1,6 @@
 {
   "name": "@auto-pigeon/incident-contract",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The cross-stack incident contract: a versioned, bounded incident envelope, the canonical incident-code taxonomy, the correlation-id convention every Auto-Pigeon component propagates, and the central redaction rules. Contract data plus a dependency-free reference implementation — no transport, no SDK, no running service.",
   "license": "Apache-2.0",
   "type": "module",

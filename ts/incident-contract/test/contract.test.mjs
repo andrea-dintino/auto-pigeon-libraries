@@ -17,6 +17,8 @@ import {
   validateIncident,
   formatOccurredAt,
   newIncidentId,
+  newTransportEventId,
+  toSentryEvent,
   CORRELATION_HEADER,
   CORRELATION_TAG,
   isCorrelationId,
@@ -243,4 +245,85 @@ test("createIncident invents an id and a timestamp and nothing else", () => {
 
 test("the public bug target is recorded once, here", () => {
   assert.equal(BUG_REPORT_URL, "https://github.com/auto-pigeon/bug-reports/issues");
+});
+
+// ---------------------------------------------------------------------------
+// INC-01 — two identities: one stable incident, one id per transmission
+// ---------------------------------------------------------------------------
+
+/** The escalating stall the ladder produces: one incident, four transmissions. */
+function stall() {
+  return createIncident({
+    severity: "warning",
+    component: "AUP",
+    subsystem: "watchdog",
+    code: "editor.main_thread_stall",
+    operation: "Paste",
+    message: "Auto-Pigeon has been busy for 3 seconds while pasting.",
+    duration_ms: 3_000,
+    correlation_id: "aaaabbbbccccddddeeeeffff00001111",
+    release: "1.407",
+    environment: "test",
+    recoverable: true,
+    evidence: { face_count: 7_475 },
+  });
+}
+
+test("a transport event id is 32 lowercase hex characters and a genuine version-4 UUID", () => {
+  for (let index = 0; index < 64; index += 1) {
+    const id = newTransportEventId();
+    assert.match(id, /^[0-9a-f]{32}$/, "Sentry: exactly 32 hex characters, no dashes");
+    assert.equal(id[12], "4", "version nibble");
+    assert.ok("89ab".includes(id[16]), "variant nibble");
+  }
+});
+
+test("a transport event id is never the same twice", () => {
+  const seen = new Set();
+  for (let index = 0; index < 1_000; index += 1) seen.add(newTransportEventId());
+  assert.equal(seen.size, 1_000);
+});
+
+test("converting one incident three times gives three transport ids and one incident id", () => {
+  // The whole of INC-01. GlitchTip answers 422 `Duplicate event id` to the second event carrying an
+  // id it already holds, so the 10 s and 30 s rungs of every stall were being thrown away at the
+  // door while the incident itself was — correctly — still one incident.
+  const incident = stall();
+  const events = [toSentryEvent(incident), toSentryEvent(incident), toSentryEvent(incident)];
+
+  const transportIds = new Set(events.map((event) => event.event_id));
+  assert.equal(transportIds.size, 3, "three transmissions, three transport ids");
+  for (const event of events) assert.notEqual(event.event_id, incident.incident_id);
+
+  const incidentIds = new Set(events.map((event) => event.contexts.incident.incident_id));
+  assert.deepEqual([...incidentIds], [incident.incident_id], "one incident, whatever it costs");
+});
+
+test("every event is queryable back to the stable incident, by a searchable tag", () => {
+  const incident = stall();
+  const events = [toSentryEvent(incident), toSentryEvent(incident), toSentryEvent(incident)];
+  for (const event of events) {
+    // The tag is the searchable half — `contexts` is not indexed by GlitchTip — and it must agree
+    // with the closed context block, which is the half a reader can trust to be bounded.
+    assert.equal(event.tags.incident_id, incident.incident_id);
+    assert.equal(event.contexts.incident.incident_id, incident.incident_id);
+    assert.equal(event.tags[CORRELATION_TAG], incident.correlation_id);
+  }
+});
+
+test("one fault is one issue however many times it was transmitted", () => {
+  // Without this the three rungs are three MESSAGES ("after 3 seconds", "after 10 seconds") and the
+  // default grouping files them as three unrelated issues — trading a rejected send for a scattered
+  // one. Same four fields as AUB's and AUE's Go reporters.
+  const incident = stall();
+  const later = { ...incident, message: "Auto-Pigeon has been busy for 30 seconds while pasting.", duration_ms: 30_000 };
+  assert.deepEqual(toSentryEvent(incident).fingerprint, ["AUP", "editor.main_thread_stall", "watchdog", "Paste"]);
+  assert.deepEqual(toSentryEvent(later).fingerprint, toSentryEvent(incident).fingerprint);
+});
+
+test("the stable incident id survives the trip out, because nothing matches a bare hex string", () => {
+  const incident = stall();
+  const event = toSentryEvent(incident);
+  assert.match(event.tags.incident_id, /^[0-9a-f]{32}$/);
+  assert.equal(event.tags.incident_id, incident.incident_id);
 });

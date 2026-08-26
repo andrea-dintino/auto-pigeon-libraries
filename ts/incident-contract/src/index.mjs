@@ -26,6 +26,7 @@ export { validateIncident } from "./validate.mjs";
 
 export {
   newIncidentId,
+  newTransportEventId,
   formatOccurredAt,
   createIncident,
   toSentryEvent,

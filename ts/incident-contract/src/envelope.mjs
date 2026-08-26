@@ -10,6 +10,48 @@ export function newIncidentId() {
 }
 
 /**
+ * A fresh **transport** event id: the value Sentry and GlitchTip store one EVENT under.
+ *
+ * It is not the incident id, and keeping the two apart is the whole of INC-01. `incident_id` names
+ * one fault in the product's own terms and stays put while that fault escalates — 3 s, 10 s, 30 s,
+ * recovery — so the ring buffer holds one row, the user sees one card, and a reader can ask about
+ * one thing. `event_id` names one TRANSMISSION, and the ingest enforces that: GlitchTip's store
+ * endpoint answers HTTP 422 `Duplicate event id` to the second event carrying an id it already
+ * holds. Sending the stable incident id as the transport id therefore delivered the FIRST rung of
+ * every stall and silently threw away every later one — OBS-07 measured 22 rejected sends in a
+ * single stage, which is the entire escalation story of a stall being lost at the door.
+ *
+ * The two are tied back together by the `incident_id` TAG that {@link toSentryEvent} puts on every
+ * event, so all the rungs of one stall are still one query. The id also stays in the closed
+ * `contexts.incident` block, where it always was.
+ *
+ * ### Why a version-4 UUID and not the plain 128 random bits used everywhere else here
+ *
+ * Because this one is somebody else's field. Sentry's event payload documents `event_id` as a
+ * *"hexadecimal string representing a uuid4 value"*, exactly 32 characters, no dashes. Today's
+ * GlitchTip parses it with a UUID constructor that accepts any 32 hex characters — which is why the
+ * old code worked at all — and satisfying the DOCUMENTED contract rather than what one server
+ * version happens to tolerate is what survives the next upgrade. It is still 32 lowercase hex
+ * characters, so it is the same shape to a reader and to redaction, where nothing matches a bare
+ * 32-character hex string on purpose.
+ *
+ * `crypto.getRandomValues` rather than `crypto.randomUUID`, and that is not a style choice:
+ * `randomUUID` is exposed only in a SECURE CONTEXT, and AUP is served over plain HTTP on a LAN. An
+ * id generator that exists on `localhost` and is `undefined` at `192.168.0.33` fails in exactly the
+ * deployment nobody tests. There is no `Math.random()` fallback here for the reason
+ * `newCorrelationId` gives.
+ */
+export function newTransportEventId() {
+  const bytes = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 1, RFC 4122
+  let out = "";
+  for (const byte of bytes) out += byte.toString(16).padStart(2, "0");
+  return out;
+}
+
+/**
  * The `occurred_at` format the schema demands: UTC, RFC 3339, milliseconds, `Z`.
  *
  * A fixed shape rather than "whatever toISOString gives" so that the pattern in the schema can be
@@ -78,12 +120,30 @@ export function createIncident(fields) {
  * observability foundation rests on them: the RELEASE (`1.N`), the ENVIRONMENT, and the
  * CORRELATION ID as a tag.
  *
+ * ### Two identities, and every call mints one of them
+ *
+ * `event_id` is a FRESH {@link newTransportEventId} on every call, because it identifies a
+ * transmission and GlitchTip refuses a repeat with HTTP 422. `incident_id` is the stable one and it
+ * travels twice: in the closed `contexts.incident` block where it always was, and now as a
+ * SEARCHABLE TAG, which is what makes the four events of one escalating stall one query rather than
+ * four unrelated rows. Nothing is encoded in either — both are random bits — so the tag publishes
+ * nothing the context did not already carry.
+ *
+ * The `fingerprint` is here for the same reason. Once repeated transmissions stop being rejected,
+ * the three rungs of one stall are three events whose MESSAGES differ ("after 3 seconds", "after 10
+ * seconds"), and the default grouping would file them as three unrelated issues. Grouping on what
+ * the fault IS — component, code, subsystem, operation — is what AUB and AUE have always done here,
+ * and this is the line that makes the three lanes agree. It is deliberately not the message: a
+ * message carrying a duration or a map name groups every occurrence separately, which is the
+ * failure this prevents.
+ *
  * The event is redacted on the way out. That is not belt-and-braces — this is the boundary where
  * the closed schema stops governing, because from here the payload is somebody else's format.
  */
 export function toSentryEvent(incident, options = {}) {
   const safe = redactIncident(incident);
   const tags = {
+    incident_id: safe.incident_id,
     incident_code: safe.code,
     component: safe.component,
     recoverable: String(safe.recoverable),
@@ -93,7 +153,7 @@ export function toSentryEvent(incident, options = {}) {
   if (isCorrelationId(safe.correlation_id)) tags[CORRELATION_TAG] = safe.correlation_id;
 
   const event = {
-    event_id: safe.incident_id,
+    event_id: newTransportEventId(),
     timestamp: safe.occurred_at,
     level: safe.severity,
     logger: `auto-pigeon.${safe.component.toLowerCase()}`,
@@ -103,6 +163,9 @@ export function toSentryEvent(incident, options = {}) {
     transaction: safe.operation,
     message: safe.message,
     tags,
+    // One stall is one issue, however many times it escalated. See the note above; the same four
+    // fields, in the same order, as AUB's and AUE's Go reporters.
+    fingerprint: [safe.component, safe.code, safe.subsystem ?? "", safe.operation ?? ""],
     // `contexts` is Sentry's own place for structured, non-searchable detail. The whole of it here
     // is the closed evidence object plus the two durations — nothing else may be added, or the
     // bound the envelope schema provides stops meaning anything the moment an event leaves.
