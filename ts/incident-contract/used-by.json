@@ -1,0 +1,10 @@
+{
+  "package": "ts/incident-contract",
+  "consumers": [
+    {
+      "repo": "auto-pigeon-tools",
+      "usage": "Its observability smoke test builds envelopes from this package, redacts them and sends them to the launched GlitchTip as JavaScript, Go and Python events, asserting that the release, environment and correlation id arrive; its Python helpers read schema/incident-codes.json and schema/redaction-rules.json rather than restating either.",
+      "added": "2026-08-26"
+    }
+  ]
+}

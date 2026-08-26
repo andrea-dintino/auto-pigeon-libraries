@@ -42,6 +42,7 @@ which names the repositories that consume it and validates against
 | --- | --- |
 | [`ts/apmap-schema`](ts/apmap-schema/) | the canonical APMap contract. **1.1 = current READ + WRITE contract; 1.0 = deprecated legacy READ contract.** Exactly one current schema, the legacy contracts beside it under `schema/deprecated/`, the normative `SEMANTICS.md`, and the conformance vectors. Contract material only, no runtime code. |
 | [`ts/health-contract`](ts/health-contract/) | the cross-stack `/version` and `/healthz` contracts every long-lived Auto-Pigeon service answers, and the topology-independent base configuration for the stack's Gatus health monitor. Schemas and one static template, no runtime code. |
+| [`ts/incident-contract`](ts/incident-contract/) | the cross-stack incident contract: a **closed** incident envelope (`additionalProperties: false` at every level, `evidence` a fixed set of typed counters), the canonical incident-code taxonomy, the correlation-id convention every component propagates, and the central redaction rules. Contract data plus a dependency-free reference implementation — no transport, no SDK, nothing that runs on its own. |
 
 The TypeScript APMap reader/writer/validator is next; it will consume
 `apmap-schema` rather than carry its own copy.
