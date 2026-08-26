@@ -5,6 +5,11 @@
       "repo": "auto-pigeon-tools",
       "usage": "Its observability smoke test builds envelopes from this package, redacts them and sends them to the launched GlitchTip as JavaScript, Go and Python events, asserting that the release, environment and correlation id arrive; its Python helpers read schema/incident-codes.json and schema/redaction-rules.json rather than restating either.",
       "added": "2026-08-26"
+    },
+    {
+      "repo": "auto-pigeon",
+      "usage": "The editor's whole incident subsystem is built on it (OBS-02). services/incidents.ts uses createIncident, redactValue, validateIncident, newCorrelationId/isCorrelationId and the schema version; services/incidentTransport.ts uses toSentryEvent to POST to the self-hosted GlitchTip's store endpoint, with no Sentry SDK; services/bugReport.ts uses toDiagnosticText, redactText and BUG_REPORT_URL for the sanitised report and the prefilled public issue; services/api.ts puts CORRELATION_HEADER on every outbound request. The incident CODES are read from the taxonomy rather than restated: render.*, editor.*, aub.*, auc.*, aue.* and reporting.telemetry_unavailable are all used as written there.",
+      "added": "2026-08-26"
     }
   ]
 }
