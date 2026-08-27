@@ -44,6 +44,12 @@
       "directory": "auto-pigeon-libraries",
       "clone_url": "https://github.com/andrea-dintino/auto-pigeon-libraries.git",
       "role": "Shared libraries and canonical contracts. Holds this manifest and the APMap schema."
+    },
+    {
+      "alias": "TEL",
+      "directory": "auto-pigeon-telemetry",
+      "clone_url": "https://github.com/andrea-dintino/auto-pigeon-telemetry.git",
+      "role": "Deployment of the third-party observability software: GlitchTip, its PostgreSQL, Gatus."
     }
   ]
 }

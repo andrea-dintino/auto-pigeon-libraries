@@ -14,11 +14,20 @@ const WORKSPACE_DIR = path.resolve(PACKAGE_ROOT, '../../workspace');
 const manifest = readJson(path.join(WORKSPACE_DIR, 'auto-pigeon-workspace.json'));
 const schema = readJson(path.join(WORKSPACE_DIR, 'auto-pigeon-workspace.schema.json'));
 
-/** Every repository the workspace is defined to contain. Changing this is a product decision. */
+/**
+ * Every repository the workspace is defined to contain. Changing this is a product decision.
+ *
+ * TEL joined at `TEL-02`, which made `auto-pigeon-telemetry` the canonical home of the third-party
+ * observability deployment — the GlitchTip, PostgreSQL and Gatus compose definitions and their
+ * image pins. The launcher resolves it as an ordinary sibling checkout, so a workspace cloned from
+ * this manifest without it would come up with observability permanently degraded: the manifest is
+ * what `clone-auto-pigeon-stack.sh` and `pull-auto-pigeon-stack.sh` work from, and a repository the
+ * tooling requires but the list omits is a workspace nobody can reproduce.
+ */
 const CANONICAL = {
   AUP: 'auto-pigeon', AUB: 'auto-pigeon-backend', AUC: 'auto-pigeon-collaboration',
   AUE: 'auto-pigeon-extractor', AUG: 'auto-pigeon-gallery', AUT: 'auto-pigeon-tools',
-  AULIBS: 'auto-pigeon-libraries',
+  AULIBS: 'auto-pigeon-libraries', TEL: 'auto-pigeon-telemetry',
 };
 
 test('the manifest validates against its schema', () => {
@@ -33,7 +42,7 @@ test('aliases, directories and clone URLs are each unique', () => {
   }
 });
 
-test('the manifest names exactly the seven canonical repositories', () => {
+test('the manifest names exactly the eight canonical repositories', () => {
   assert.deepEqual(Object.fromEntries(manifest.repositories.map((e) => [e.alias, e.directory])), CANONICAL);
 });
 
