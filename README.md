@@ -30,6 +30,7 @@ auto-pigeon-libraries/
 ├── meta/used-by.schema.json  # schema for each package's consumer manifest
 ├── workspace/                # the canonical Auto-Pigeon workspace manifest (see workspace/README.md)
 ├── fixtures/                 # shared apmap fixtures (see fixtures/README.md)
+├── games/<game>/             # one folder per per-game data package
 ├── ts/                       # one folder per TypeScript package
 └── go/                       # one folder per Go package (none yet)
 ```
@@ -43,6 +44,7 @@ which names the repositories that consume it and validates against
 | [`ts/apmap-schema`](ts/apmap-schema/) | the canonical APMap contract. **1.1 = current READ + WRITE contract; 1.0 = deprecated legacy READ contract.** Exactly one current schema, the legacy contracts beside it under `schema/deprecated/`, the normative `SEMANTICS.md`, and the conformance vectors. Contract material only, no runtime code. |
 | [`ts/health-contract`](ts/health-contract/) | the cross-stack `/version` and `/healthz` contracts every long-lived Auto-Pigeon service answers, and the topology-independent base configuration for the stack's Gatus health monitor. Schemas and one static template, no runtime code. |
 | [`ts/incident-contract`](ts/incident-contract/) | the cross-stack incident contract: a **closed** incident envelope (`additionalProperties: false` at every level, `evidence` a fixed set of typed counters), the canonical incident-code taxonomy, the correlation-id convention every component propagates, and the central redaction rules. Contract data plus a dependency-free reference implementation — no transport, no SDK, nothing that runs on its own. |
+| [`ts/lighting-rules`](ts/lighting-rules/) | the lighting rule-inference contract: the game-independent **analysis** and **held-out validation** artifacts, and the shape of the per-game lighting **vocabulary** they are read through. The separation is the point — geometry is the same in every engine, `light` meaning intensity is not — and a test asserts the generic schemas name no game's classnames. Schemas only, no runtime code. |
 
 The TypeScript APMap reader/writer/validator is next; it will consume
 `apmap-schema` rather than carry its own copy.

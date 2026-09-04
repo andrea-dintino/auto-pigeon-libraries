@@ -1,0 +1,10 @@
+{
+  "package": "ts/lighting-rules",
+  "consumers": [
+    {
+      "repo": "auto-pigeon-extractor",
+      "usage": "infer-lighting-rules validates the per-game lighting vocabulary it loads against lighting-semantics.schema.json, and validates the analysis and held-out validation artifacts it publishes against the other two - so the shipped documents are checked against this contract by the producer's own test suite rather than by review.",
+      "added": "2026-09-04"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@auto-pigeon/lighting-rules",
+  "version": "1.0.0",
+  "description": "The lighting rule-inference contract: the game-independent analysis and validation artifacts, and the shape of the per-game lighting vocabulary they are read through. Schemas only - no runtime code, no inference, nothing that runs on its own.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "schema",
+    "README.md",
+    "SEMANTICS.md"
+  ],
+  "exports": {
+    ".": "./schema/lighting-analysis.schema.json",
+    "./analysis": "./schema/lighting-analysis.schema.json",
+    "./validation": "./schema/lighting-validation.schema.json",
+    "./semantics": "./schema/lighting-semantics.schema.json",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0"
+  }
+}

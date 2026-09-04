@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/auto-pigeon/auto-pigeon-libraries/ts/lighting-rules/schema/lighting-semantics.schema.json",
+  "title": "Per-game lighting semantics",
+  "description": "What a light entity's properties mean in one game. It carries no geometry, no thresholds and no rules: everything here is vocabulary a consumer cannot derive from a map, and everything a consumer CAN derive from a map is deliberately absent. The per-game instance lives at games/<game>/lighting-semantics/lighting.json; a Game Profile may override it whole.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "game_id", "units", "fixtures", "keys"],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "auto-pigeon.lighting-semantics/1.0"
+    },
+    "game_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "The game this vocabulary belongs to, matching the games/<game>/ folder that carries it."
+    },
+    "units": {
+      "type": "string",
+      "const": "world_units",
+      "description": "Present so a reader never has to assume. Every length a consumer measures against this vocabulary is in the map's own units."
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["basis", "excludes"],
+      "properties": {
+        "basis": { "type": "string", "minLength": 1 },
+        "excludes": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What this document deliberately does not carry. Required, because a vocabulary that does not say what it left out reads as complete."
+        },
+        "observed_in": { "type": "string", "minLength": 1 }
+      }
+    },
+    "fixtures": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 512,
+      "description": "The light-emitting classnames this game ships. It is a vocabulary, never a whitelist: a map may hold a light classname absent from here, and a consumer reports that rather than discarding it.",
+      "items": { "$ref": "#/$defs/fixture" }
+    },
+    "keys": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The entity keys that carry each trait. A trait whose key this game does not have is simply absent, which is what makes it unknown rather than defaulted.",
+      "properties": {
+        "intensity": { "$ref": "#/$defs/key" },
+        "style": { "$ref": "#/$defs/key" },
+        "yaw": { "$ref": "#/$defs/key" },
+        "pitch": { "$ref": "#/$defs/key" },
+        "target": { "$ref": "#/$defs/key" },
+        "targetname": { "$ref": "#/$defs/key" },
+        "spawnflags": { "$ref": "#/$defs/key" },
+        "colour": { "$ref": "#/$defs/key" },
+        "surface_intent": { "$ref": "#/$defs/key" }
+      }
+    },
+    "undeclared_traits": {
+      "type": "array",
+      "maxItems": 64,
+      "description": "Traits this game's shipped vocabulary has no key for, each with the reason. Saying it out loud is the point: a consumer can then refuse a rule that claims the trait, instead of publishing a confident default nobody chose.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["trait", "reason"],
+        "properties": {
+          "trait": { "$ref": "#/$defs/trait_name" },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "trait_name": {
+      "type": "string",
+      "enum": [
+        "intensity",
+        "style",
+        "yaw",
+        "pitch",
+        "target",
+        "targetname",
+        "spawnflags",
+        "colour",
+        "surface_intent"
+      ]
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classname", "family", "renders", "mount_declared_by_classname"],
+      "properties": {
+        "classname": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]+$"
+        },
+        "family": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$",
+          "description": "How a human groups this fixture - torch, flame, globe, fluorescent, abstract. It is the reading of the classname, and it is what a rule is stated in terms of."
+        },
+        "renders": {
+          "type": "boolean",
+          "description": "Whether the entity draws something a player sees, as opposed to being an invisible light sample."
+        },
+        "mount_declared_by_classname": {
+          "description": "Set only where the classname itself says where the fixture goes - `walltorch` does; `light_flame_large_yellow` does not. Null means the consumer measures it, and a measurement that disagrees with a declaration is evidence, not an error.",
+          "enum": ["wall", "ceiling", "floor", null]
+        }
+      }
+    },
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "kind"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The entity property name as it appears in a map."
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["number", "integer", "string", "vector3"]
+        },
+        "default": {
+          "description": "The value the engine uses when the key is absent. A trait read from a default is recorded as defaulted, never as declared.",
+          "type": ["number", "string", "array"]
+        },
+        "steady_value": {
+          "type": ["number", "string"],
+          "description": "For an animation-style key: the value that means `does not animate`."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "auto-pigeon.lighting-semantics/1.0",
+  "game_id": "quake1",
+  "units": "world_units",
+  "provenance": {
+    "basis": "The light entity vocabulary that appears in id Software's own shipped Quake 1 map sources.",
+    "excludes": "Every light-compiler extension. A key a compiler adds - colour, delay, falloff, angle attenuation, surface emission - is operator-supplied through the Game Profile and is deliberately absent here.",
+    "observed_in": "38 shipped Quake 1 .map sources, 8127 light entities"
+  },
+  "fixtures": [
+    {
+      "classname": "light",
+      "family": "abstract",
+      "renders": false,
+      "mount_declared_by_classname": null
+    },
+    {
+      "classname": "light_fluoro",
+      "family": "fluorescent",
+      "renders": false,
+      "mount_declared_by_classname": null
+    },
+    {
+      "classname": "light_fluorospark",
+      "family": "fluorescent",
+      "renders": false,
+      "mount_declared_by_classname": null
+    },
+    {
+      "classname": "light_globe",
+      "family": "globe",
+      "renders": true,
+      "mount_declared_by_classname": null
+    },
+    {
+      "classname": "light_torch_small_walltorch",
+      "family": "torch",
+      "renders": true,
+      "mount_declared_by_classname": "wall"
+    },
+    {
+      "classname": "light_flame_large_yellow",
+      "family": "flame",
+      "renders": true,
+      "mount_declared_by_classname": null
+    },
+    {
+      "classname": "light_flame_small_yellow",
+      "family": "flame",
+      "renders": true,
+      "mount_declared_by_classname": null
+    },
+    {
+      "classname": "light_flame_small_white",
+      "family": "flame",
+      "renders": true,
+      "mount_declared_by_classname": null
+    }
+  ],
+  "keys": {
+    "intensity": { "key": "light", "kind": "number", "default": 300 },
+    "style": { "key": "style", "kind": "integer", "default": 0, "steady_value": 0 },
+    "yaw": { "key": "angle", "kind": "number" },
+    "target": { "key": "target", "kind": "string" },
+    "targetname": { "key": "targetname", "kind": "string" },
+    "spawnflags": { "key": "spawnflags", "kind": "integer", "default": 0 }
+  },
+  "undeclared_traits": [
+    {
+      "trait": "colour",
+      "reason": "Quake 1 as id shipped it has no per-light colour key. A profile that declares one supplies the key name; until it does, colour is unknown rather than white."
+    },
+    {
+      "trait": "surface_intent",
+      "reason": "Quake 1 has no surface-light mechanism in the shipped vocabulary. A light entity is a point sample. A profile that declares a surface-emission mechanism supplies it; inferring one from geometry would be an invented semantic."
+    }
+  ]
+}

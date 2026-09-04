@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/auto-pigeon/auto-pigeon-libraries/ts/lighting-rules/schema/lighting-validation.schema.json",
+  "title": "Held-out lighting validation",
+  "description": "What happened when the inferred templates were applied to maps the inference never saw. Four measurements that fail separately, because `placement was fine but nothing was lit` and `everything was lit from inside a wall` are different failures and one score cannot hold both.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "analysis_digest",
+    "held_out",
+    "proposals",
+    "placement",
+    "illumination_proxy",
+    "authored_agreement",
+    "false_semantic_assumptions",
+    "notes"
+  ],
+  "properties": {
+    "schema": { "type": "string", "const": "auto-pigeon.lighting-validation/1.0" },
+    "analysis_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "The analysis document these results belong to. A validation report that does not name its analysis is a set of numbers about nothing."
+    },
+    "held_out": {
+      "type": "array",
+      "maxItems": 512,
+      "description": "The maps evaluated against. They are held out by construction: an input that appears in the inference corpus is refused rather than scored.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["logical", "sha256", "regions", "authored_lights"],
+        "properties": {
+          "logical": { "type": "string", "minLength": 1, "pattern": "^[^/\\\\][^\\\\]*$" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "regions": { "type": "integer", "minimum": 0 },
+          "authored_lights": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "proposals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "by_template"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "by_template": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["template_id", "proposals", "valid", "collisions"],
+            "properties": {
+              "template_id": { "type": "string", "minLength": 1 },
+              "proposals": { "type": "integer", "minimum": 0 },
+              "valid": { "type": "integer", "minimum": 0 },
+              "collisions": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "placement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["proposals", "valid", "validity", "collisions", "collision_rate", "refusals"],
+      "properties": {
+        "proposals": { "type": "integer", "minimum": 0 },
+        "valid": { "type": "integer", "minimum": 0 },
+        "validity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "collisions": { "type": "integer", "minimum": 0 },
+        "collision_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "refusals": {
+          "type": "array",
+          "maxItems": 64,
+          "description": "Why a proposal was not valid, by name. A validity figure with no breakdown cannot be acted on.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reason", "count"],
+            "properties": {
+              "reason": { "type": "string", "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$" },
+              "count": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "illumination_proxy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "sample_spacing", "floor_samples", "covered", "coverage", "authored_coverage"],
+      "description": "A PROXY, named as one. It is a distance-and-occlusion test over floor samples, not a light compile, and it is comparable only against the same proxy run over the authored lights - which is why authored_coverage is beside it and is required.",
+      "properties": {
+        "method": { "type": "string", "minLength": 1 },
+        "sample_spacing": { "type": "number", "minimum": 1 },
+        "floor_samples": { "type": "integer", "minimum": 0 },
+        "covered": { "type": "integer", "minimum": 0 },
+        "coverage": { "type": "number", "minimum": 0, "maximum": 1 },
+        "authored_coverage": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "authored_agreement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authored", "matched", "recall", "tolerance"],
+      "properties": {
+        "authored": { "type": "integer", "minimum": 0 },
+        "matched": { "type": "integer", "minimum": 0 },
+        "recall": { "type": "number", "minimum": 0, "maximum": 1 },
+        "tolerance": { "type": "number", "minimum": 0 }
+      }
+    },
+    "false_semantic_assumptions": {
+      "type": "array",
+      "maxItems": 512,
+      "description": "Every place a template asserted a semantic the effective lighting vocabulary does not declare, or a fixture placement the geometry refuses. This is the measurement that catches a plausible rule built on a vocabulary that was never there.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["template_id", "assumption", "reason", "occurrences"],
+        "properties": {
+          "template_id": { "type": "string", "minLength": 1 },
+          "assumption": { "type": "string", "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$" },
+          "reason": { "type": "string", "minLength": 1 },
+          "occurrences": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "notes": { "type": "array", "maxItems": 64, "items": { "type": "string", "minLength": 1 } }
+  }
+}

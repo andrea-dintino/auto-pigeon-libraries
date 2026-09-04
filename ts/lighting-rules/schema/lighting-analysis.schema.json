@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/auto-pigeon/auto-pigeon-libraries/ts/lighting-rules/schema/lighting-analysis.schema.json",
+  "title": "Inferred lighting rules",
+  "description": "A versioned, explainable lighting analysis: what was measured, over what corpus, how often, and what was refused. It is a RECOMMENDATION a human reads, never an instruction a tool applies and never training material. Nothing here is a model, a weight or an embedding; every published rule decomposes into the measurements that produced it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "kind",
+    "reviewed_by",
+    "game_id",
+    "semantics",
+    "settings",
+    "corpus",
+    "trait_vocabulary",
+    "distributions",
+    "templates",
+    "exclusions",
+    "uncertainty"
+  ],
+  "properties": {
+    "schema": { "type": "string", "const": "auto-pigeon.lighting-analysis/1.0" },
+    "kind": {
+      "type": "string",
+      "const": "recommendation",
+      "description": "Constant, and constant on purpose. A document that could also be an instruction would eventually be applied by something."
+    },
+    "reviewed_by": { "type": "string", "const": "human" },
+    "game_id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "game_id", "source", "digest", "declared_traits", "undeclared_traits"],
+      "description": "Which lighting vocabulary answered, and where it came from. A rule inferred under one vocabulary does not carry over to another, so the analysis names its own.",
+      "properties": {
+        "schema": { "type": "string", "minLength": 1 },
+        "game_id": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "enum": ["aulibs", "request"] },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "declared_traits": { "type": "array", "maxItems": 64, "items": { "type": "string" } },
+        "undeclared_traits": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["trait", "reason"],
+            "properties": {
+              "trait": { "type": "string", "minLength": 1 },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": { "type": ["number", "integer", "string", "boolean"] },
+      "description": "Every threshold the run used, serialized beside the decisions it produced. A number that decides a membership and is not here is a magic number."
+    },
+    "corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maps_read",
+        "maps_failed",
+        "lights_seen",
+        "lights_observed",
+        "lights_excluded",
+        "inputs"
+      ],
+      "properties": {
+        "maps_read": { "type": "integer", "minimum": 0 },
+        "maps_failed": { "type": "integer", "minimum": 0 },
+        "lights_seen": { "type": "integer", "minimum": 0 },
+        "lights_observed": { "type": "integer", "minimum": 0 },
+        "lights_excluded": { "type": "integer", "minimum": 0 },
+        "inputs": {
+          "type": "array",
+          "maxItems": 4096,
+          "description": "Provenance, one row per input. The logical name and the digest, never a host path: this document is published and a path names the machine that made it.",
+          "items": { "$ref": "#/$defs/input" }
+        }
+      }
+    },
+    "trait_vocabulary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["geometric", "semantic"],
+      "description": "The separation this whole contract exists for. A geometric trait is measured from the map and means the same in every game; a semantic trait is read through the game's lighting vocabulary and means nothing without it.",
+      "properties": {
+        "geometric": { "type": "array", "maxItems": 64, "items": { "type": "string" } },
+        "semantic": { "type": "array", "maxItems": 64, "items": { "type": "string" } }
+      }
+    },
+    "distributions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numeric", "categorical"],
+      "properties": {
+        "numeric": { "type": "object", "additionalProperties": { "$ref": "#/$defs/numeric_distribution" } },
+        "categorical": { "type": "object", "additionalProperties": { "$ref": "#/$defs/categorical_distribution" } }
+      }
+    },
+    "templates": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": { "$ref": "#/$defs/template" }
+    },
+    "exclusions": {
+      "type": "array",
+      "maxItems": 256,
+      "description": "Why observations and candidate groups did not become templates. An exclusion that is not listed is indistinguishable from evidence the run never saw.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reason", "observations", "groups"],
+        "properties": {
+          "reason": { "type": "string", "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$" },
+          "observations": { "type": "integer", "minimum": 0 },
+          "groups": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["templates_published", "observations_covered", "coverage", "notes"],
+      "properties": {
+        "templates_published": { "type": "integer", "minimum": 0 },
+        "observations_covered": { "type": "integer", "minimum": 0 },
+        "coverage": { "type": "number", "minimum": 0, "maximum": 1 },
+        "notes": { "type": "array", "maxItems": 64, "items": { "type": "string", "minLength": 1 } }
+      }
+    }
+  },
+  "$defs": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["logical", "sha256", "bytes", "status", "lights"],
+      "properties": {
+        "logical": { "type": "string", "minLength": 1, "pattern": "^[^/\\\\][^\\\\]*$" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "status": { "type": "string", "enum": ["read", "failed"] },
+        "lights": { "type": "integer", "minimum": 0 },
+        "error": { "type": "string", "minLength": 1 }
+      }
+    },
+    "numeric_distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["samples", "min", "p10", "median", "p90", "max"],
+      "properties": {
+        "samples": { "type": "integer", "minimum": 0 },
+        "min": { "type": "number" },
+        "p10": { "type": "number" },
+        "median": { "type": "number" },
+        "p90": { "type": "number" },
+        "max": { "type": "number" },
+        "declared": { "type": "integer", "minimum": 0 },
+        "defaulted": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "categorical_distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["samples", "values"],
+      "properties": {
+        "samples": { "type": "integer", "minimum": 0 },
+        "values": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["value", "count"],
+            "properties": {
+              "value": { "type": "string" },
+              "count": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "template_id",
+        "signature",
+        "samples",
+        "maps",
+        "support",
+        "traits",
+        "uncertainty",
+        "evidence"
+      ],
+      "properties": {
+        "template_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$",
+          "description": "Derived from the signature, never from an emission ordinal, so two runs over different corpora name the same arrangement the same way."
+        },
+        "signature": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fixture_family",
+            "attachment",
+            "region_kind",
+            "style_animated",
+            "switchable",
+            "height_band"
+          ],
+          "properties": {
+            "fixture_family": { "type": "string", "minLength": 1 },
+            "attachment": { "type": "string", "enum": ["wall", "ceiling", "floor", "free_standing"] },
+            "region_kind": { "type": "string", "enum": ["room_like", "corridor_like", "shaft_like", "open"] },
+            "style_animated": { "type": "boolean" },
+            "switchable": { "type": "boolean" },
+            "height_band": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The band's own median height above the floor. It is IN the signature rather than in the distributions because a fixture at 64 and one at 192 are two rules, and pooling them publishes a median height nobody authored."
+            }
+          }
+        },
+        "samples": { "type": "integer", "minimum": 1 },
+        "maps": { "type": "integer", "minimum": 1 },
+        "support": { "type": "number", "minimum": 0, "maximum": 1 },
+        "traits": { "type": "object", "additionalProperties": { "$ref": "#/$defs/numeric_distribution" } },
+        "uncertainty": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["relative_spread", "map_concentration", "notes"],
+          "properties": {
+            "relative_spread": { "type": "object", "additionalProperties": { "type": "number", "minimum": 0 } },
+            "map_concentration": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "The share of this template's samples that come from its single commonest map. Near 1 means one author's one level, not a pattern."
+            },
+            "notes": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1 } }
+          }
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maps"],
+          "properties": {
+            "maps": { "type": "array", "maxItems": 4096, "items": { "type": "string", "minLength": 1 } }
+          }
+        }
+      }
+    }
+  }
+}

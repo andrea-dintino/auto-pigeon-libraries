@@ -1,0 +1,10 @@
+{
+  "package": "games/quake1/lighting-semantics",
+  "consumers": [
+    {
+      "repo": "auto-pigeon-extractor",
+      "usage": "infer-lighting-rules resolves the effective Quake 1 lighting semantics from lighting.json whenever a request supplies no lighting-semantics document; the fixture table, the key names and the defaults decide which entities are lights and what each of their properties means.",
+      "added": "2026-09-04"
+    }
+  ]
+}
