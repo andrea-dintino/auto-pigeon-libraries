@@ -7,6 +7,8 @@ One folder per package.
 | [`apmap-schema/`](apmap-schema/) | the canonical APMap JSON Schema (1.1, and 1.0 frozen) and its conformance vectors. Schema and tests only, no runtime code. |
 | [`health-contract/`](health-contract/) | the cross-stack `/version` and `/healthz` schemas, and the topology-independent Gatus base configuration. Schemas and one static template, no runtime code. |
 | [`incident-contract/`](incident-contract/) | the cross-stack incident envelope, the canonical incident-code taxonomy, the correlation-id convention and the central redaction rules. Contract data plus a dependency-free reference implementation; no transport and no SDK. |
+| [`lighting-rules/`](lighting-rules/) | the lighting rule-inference contract: the game-independent analysis and held-out validation artifacts, and the shape of the per-game lighting vocabulary they are read through. Schemas only, no runtime code. |
+| [`offline-workspace-contract/`](offline-workspace-contract/) | the cross-stack contract for Offline Shared Workspaces: the entity schemas, the Offline role → capability table, the stable refusal codes, the state machines with their guards and idempotency identities, and the product's fixed durations. Contract data plus a dependency-free reference implementation; no persistence, no endpoints, no UI. |
 
 The APMap reader/writer/validator library is the next to land here, and consumes
 `apmap-schema` rather than embedding a copy of it.

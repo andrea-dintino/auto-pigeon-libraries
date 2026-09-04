@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "reason": "asset_already_in_another_workspace",
+  "http_status": 409,
+  "subject_type": "asset",
+  "subject_id": "map000000000002",
+  "blocking": [
+    {
+      "type": "workspace",
+      "id": "wsother00000001",
+      "label_visible": false
+    }
+  ]
+}

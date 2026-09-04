@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "id": "thread000000001",
+  "workspace_id": "wsprivate000001",
+  "asset_id": "map000000000001",
+  "anchor": {
+    "object_id": "brush-0041",
+    "face_id": "face-3",
+    "world_position": [
+      128.0,
+      -64.0,
+      32.0
+    ],
+    "anchor_state": "anchored"
+  },
+  "created_by_user_id": "user000000000c3",
+  "state": "open",
+  "asset_revision_at_creation": 17,
+  "created_at": "2026-08-31T09:15:00.000Z",
+  "updated_at": "2026-08-31T10:15:00.000Z",
+  "resolved_at": null,
+  "resolved_by_user_id": null,
+  "reopened_at": null,
+  "message_count": 3
+}

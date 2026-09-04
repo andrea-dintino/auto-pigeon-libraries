@@ -1,0 +1,484 @@
+{
+  "schema_version": "1.0",
+  "description": "The stable refusal vocabulary for Offline Shared Workspaces. Every server-side refusal on an Offline path names one of these codes, and a new refusal path ADDS one here rather than inventing a string at a call site. Codes are lower_snake_case to match AUB's existing house style (`{\"reason\":{\"code\":...,\"message\":...}}` inside a PocketBase API error), and they travel unchanged to AUC and AUP so a modal is chosen by code and worded by locale rather than by matching on server prose. A refusal is NOT an incident: these are expected, correct outcomes of a rule, and reporting them to the incident backend would drown the signal that something is actually broken.",
+  "areas": [
+    "workspace",
+    "membership",
+    "invitation",
+    "role_request",
+    "asset",
+    "dependency",
+    "quota",
+    "revision",
+    "lease",
+    "escalation",
+    "annotation",
+    "request"
+  ],
+  "reasons": [
+    {
+      "code": "workspace_not_found",
+      "area": "workspace",
+      "http_status": 404,
+      "retryable": false,
+      "summary": "No workspace with this id is visible to the caller.",
+      "remedy": "A private workspace the caller is not a member of is reported as absent rather than as forbidden, so that workspace existence is not a probe."
+    },
+    {
+      "code": "workspace_metadata_stale_revision",
+      "area": "workspace",
+      "http_status": 409,
+      "retryable": true,
+      "summary": "The workspace metadata revision in the request is not the current one.",
+      "remedy": "Reload the workspace and reapply the change."
+    },
+    {
+      "code": "workspace_visibility_blocked_by_private_assets",
+      "area": "workspace",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "A private workspace cannot become public while private assets are attached.",
+      "remedy": "The refusal lists the blocking asset ids. Make each public, or detach it, then retry."
+    },
+    {
+      "code": "workspace_max_members_below_current",
+      "area": "workspace",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "max_members cannot be set below the current membership count.",
+      "remedy": "Remove members first, or choose a limit at or above the current count."
+    },
+    {
+      "code": "workspace_max_members_above_platform_limit",
+      "area": "workspace",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "max_members exceeds the platform's own hard bound, which an Overlord cannot raise.",
+      "remedy": "Choose a value within the platform limit reported in the refusal."
+    },
+    {
+      "code": "workspace_delete_blocked_by_active_work",
+      "area": "workspace",
+      "http_status": 409,
+      "retryable": true,
+      "summary": "The workspace holds an asset that is being edited Offline or is in a linked Real-time session.",
+      "remedy": "The refusal lists the active assets. Retry when that work ends."
+    },
+    {
+      "code": "workspace_owner_cannot_leave",
+      "area": "workspace",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The workspace owner cannot leave their own workspace.",
+      "remedy": "Keep the workspace or delete it. V1 has no ownership transfer."
+    },
+    {
+      "code": "workspace_description_unsafe_link",
+      "area": "workspace",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "The description contains a link with a scheme the product does not render.",
+      "remedy": "Use http or https. javascript: and data: are refused."
+    },
+    {
+      "code": "not_a_workspace_member",
+      "area": "membership",
+      "http_status": 403,
+      "retryable": false,
+      "summary": "The caller is not a member of this workspace.",
+      "remedy": "Accept an invitation, or join if the workspace is public and has room."
+    },
+    {
+      "code": "insufficient_workspace_role",
+      "area": "membership",
+      "http_status": 403,
+      "retryable": false,
+      "summary": "The caller's workspace role does not hold the capability this operation requires.",
+      "remedy": "The refusal names the required capability and the roles that hold it, so the sentence shown to the user is read out of the table rather than written beside it. A member below that role is offered the role-upgrade path."
+    },
+    {
+      "code": "workspace_full",
+      "area": "membership",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The public workspace is at its member limit.",
+      "remedy": "The capacity check is atomic, so exactly one of two simultaneous joins at the last slot succeeds and the other sees this."
+    },
+    {
+      "code": "already_a_workspace_member",
+      "area": "membership",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "This account is already a member; a second device or tab is not a second membership.",
+      "remedy": "Open the workspace normally."
+    },
+    {
+      "code": "member_removal_blocked_by_active_work",
+      "area": "membership",
+      "http_status": 409,
+      "retryable": true,
+      "summary": "The member holds an active Offline lease, or owns an asset pinned as a dependency of active work.",
+      "remedy": "The refusal names the assets and sessions. Retry when that work ends. V1 has no force-kick that discards another user's unsaved work."
+    },
+    {
+      "code": "role_change_blocked_by_active_lease",
+      "area": "membership",
+      "http_status": 409,
+      "retryable": true,
+      "summary": "A demotion would remove asset.edit from a member who is editing right now.",
+      "remedy": "Retry when the lease is released or expires. Blocking is preferred to mid-edit revocation."
+    },
+    {
+      "code": "workspace_owner_immutable",
+      "area": "membership",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The workspace owner cannot be demoted or removed through ordinary membership operations.",
+      "remedy": "None in V1. Exactly one owner, always holding Overlord capability."
+    },
+    {
+      "code": "invitation_not_found",
+      "area": "invitation",
+      "http_status": 404,
+      "retryable": false,
+      "summary": "No invitation matches this token.",
+      "remedy": "Nothing about the workspace is disclosed alongside this refusal."
+    },
+    {
+      "code": "invitation_expired",
+      "area": "invitation",
+      "http_status": 410,
+      "retryable": false,
+      "summary": "The invitation passed its expiry.",
+      "remedy": "Ask the Overlord for a new invitation."
+    },
+    {
+      "code": "invitation_already_used",
+      "area": "invitation",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "Invitations are single-use; this one has been accepted.",
+      "remedy": "If the membership exists, open the workspace; otherwise ask for a new invitation."
+    },
+    {
+      "code": "invitation_revoked",
+      "area": "invitation",
+      "http_status": 410,
+      "retryable": false,
+      "summary": "The Overlord revoked this invitation.",
+      "remedy": "Ask the Overlord."
+    },
+    {
+      "code": "invitation_wrong_account",
+      "area": "invitation",
+      "http_status": 403,
+      "retryable": false,
+      "summary": "The invitation is bound to a different account than the one that opened it.",
+      "remedy": "Sign in as the invited account. Nothing about the workspace is disclosed."
+    },
+    {
+      "code": "invitation_role_not_assignable",
+      "area": "invitation",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "An invitation cannot assign the Overlord role.",
+      "remedy": "Invite as Lord, Knight or Pilgrim. The assigned role is stored server-side and is never read from a URL."
+    },
+    {
+      "code": "role_request_already_pending",
+      "area": "role_request",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "This member already has a pending role request for this scope.",
+      "remedy": "Wait for the Overlord, or withdraw the pending request."
+    },
+    {
+      "code": "role_request_not_pending",
+      "area": "role_request",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The request has already been approved, denied, withdrawn or expired.",
+      "remedy": "Reload the request list."
+    },
+    {
+      "code": "role_request_cannot_target_overlord",
+      "area": "role_request",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "Workspace ownership cannot be requested through the role-upgrade mechanism.",
+      "remedy": "None. Ownership is not a role grant."
+    },
+    {
+      "code": "role_request_message_too_long",
+      "area": "role_request",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "The optional message exceeds the contract's bound.",
+      "remedy": "Shorten it. This is request metadata, not chat."
+    },
+    {
+      "code": "asset_not_found",
+      "area": "asset",
+      "http_status": 404,
+      "retryable": false,
+      "summary": "No asset with this id is visible to the caller.",
+      "remedy": "Reload the workspace."
+    },
+    {
+      "code": "asset_already_in_another_workspace",
+      "area": "asset",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "An asset belongs to at most one Shared Workspace and this one is already attached elsewhere.",
+      "remedy": "Detach it from the other workspace first. The other workspace is named ONLY when the caller can already see it; otherwise the refusal says the asset is shared elsewhere and nothing more, because naming it would leak private workspace metadata."
+    },
+    {
+      "code": "asset_not_in_workspace",
+      "area": "asset",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The asset is not attached to this workspace.",
+      "remedy": "Reload the workspace."
+    },
+    {
+      "code": "private_asset_in_public_workspace",
+      "area": "asset",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "A public workspace may contain only public assets.",
+      "remedy": "Make the asset public, then attach it. There is no bypass for copy or recovery flows."
+    },
+    {
+      "code": "asset_visibility_change_blocked_by_public_workspace",
+      "area": "asset",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "An attached asset cannot be made private while its workspace is public.",
+      "remedy": "Ask the Overlord to detach it, or make the workspace private first."
+    },
+    {
+      "code": "asset_delete_blocked_by_workspace_attachment",
+      "area": "asset",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "An asset attached to a workspace cannot be deleted by its owner through the ordinary delete path.",
+      "remedy": "Ask the Overlord to detach it, or leave the workspace, which detaches every asset the leaver owns. Account erasure is a separate lifecycle and is not blocked by this."
+    },
+    {
+      "code": "asset_detach_blocked_by_active_work",
+      "area": "asset",
+      "http_status": 409,
+      "retryable": true,
+      "summary": "The asset is being edited Offline, is in a linked Real-time session, or is a pinned dependency of one.",
+      "remedy": "Retry when that work ends. V1 prefers blocking to force-removal of an in-use dependency."
+    },
+    {
+      "code": "asset_not_mutable",
+      "area": "asset",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "This asset type has no Offline edit lease because it has no in-place edit path.",
+      "remedy": "Upload a replacement as a new asset."
+    },
+    {
+      "code": "asset_not_realtime_eligible",
+      "area": "asset",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "Only a map escalates into a Real-time session in V1.",
+      "remedy": "None. There is no whole-workspace session and no live editing of texture or package assets."
+    },
+    {
+      "code": "asset_dependency_pinned",
+      "area": "dependency",
+      "http_status": 409,
+      "retryable": true,
+      "summary": "The dependency set of an active edit or session is pinned, and this change would invalidate a map somebody is working in.",
+      "remedy": "Retry when the edit or session ends. A newly uploaded asset enters a map's dependency closure on the next controlled reopen, never underneath an open one."
+    },
+    {
+      "code": "dependency_not_accessible",
+      "area": "dependency",
+      "http_status": 403,
+      "retryable": false,
+      "summary": "A participant cannot read a required non-platform dependency of this map.",
+      "remedy": "The refusal names the dependency. A session never starts where participants have structurally different asset access."
+    },
+    {
+      "code": "dependency_missing",
+      "area": "dependency",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "A dependency the manifest names no longer resolves.",
+      "remedy": "The map remains, explicitly incomplete. Where the dependency is essential to parsing rather than to rendering, the load fails rather than degrading silently."
+    },
+    {
+      "code": "asset_owner_storage_unavailable",
+      "area": "quota",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The ASSET OWNER's account cannot currently accept writes. The saver's own quota is not consulted, and is not charged.",
+      "remedy": "Save a copy to your own account and contribute that copy. Ownership is never transferred silently and the charge is never moved to the editor."
+    },
+    {
+      "code": "asset_owner_quota_exceeded",
+      "area": "quota",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The write would put the ASSET OWNER over their storage allowance.",
+      "remedy": "Same recovery: copy to your own account. The owner may also free space."
+    },
+    {
+      "code": "stale_asset_revision",
+      "area": "revision",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "expected_revision is not the asset's current revision. The write is refused; nothing is merged and nothing is overwritten.",
+      "remedy": "The local copy is never discarded on the client's behalf. Offer `Save a copy to My Maps`, and let the user choose."
+    },
+    {
+      "code": "edit_lease_held_by_other_user",
+      "area": "lease",
+      "http_status": 409,
+      "retryable": true,
+      "summary": "Another member holds the exclusive Offline lease on this asset.",
+      "remedy": "The refusal names the incumbent. An eligible editor is offered the Real-time escalation request; the second client never receives editable state."
+    },
+    {
+      "code": "edit_lease_held_by_other_client",
+      "area": "lease",
+      "http_status": 409,
+      "retryable": true,
+      "summary": "The SAME account already holds this lease from another browser or device.",
+      "remedy": "Close the other editor. One account is one collaborator, so this never becomes a Real-time invitation to oneself, and V1 has no lease takeover between a user's own devices."
+    },
+    {
+      "code": "edit_lease_not_held",
+      "area": "lease",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The operation requires a lease the caller does not hold.",
+      "remedy": "Acquire the lease, if the asset is free."
+    },
+    {
+      "code": "edit_lease_expired",
+      "area": "lease",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The lease lapsed after the inactivity timeout and the caller no longer owns the asset.",
+      "remedy": "A returning client must revalidate rather than assume. If nobody took the asset and its revision has not moved, the lease can be reacquired; if it moved, the local work can only be saved as a copy."
+    },
+    {
+      "code": "edit_lease_not_available_for_role",
+      "area": "lease",
+      "http_status": 403,
+      "retryable": false,
+      "summary": "The caller's role does not hold asset.edit, so it cannot take an editable lease.",
+      "remedy": "Request a role upgrade. Real-time is not a permission bypass."
+    },
+    {
+      "code": "escalation_request_rate_limited",
+      "area": "escalation",
+      "http_status": 429,
+      "retryable": true,
+      "summary": "The same requester asked about the same asset too recently.",
+      "remedy": "Wait out the interval named in the refusal. This exists so a blocked user cannot spam an incumbent's notifications."
+    },
+    {
+      "code": "escalation_request_already_pending",
+      "area": "escalation",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "This requester already has a pending request for this asset.",
+      "remedy": "Wait for the incumbent to answer, or cancel."
+    },
+    {
+      "code": "escalation_request_not_pending",
+      "area": "escalation",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The request was already accepted, declined, cancelled, superseded or expired.",
+      "remedy": "Reload."
+    },
+    {
+      "code": "escalation_request_expired",
+      "area": "escalation",
+      "http_status": 410,
+      "retryable": false,
+      "summary": "The request passed its expiry before the incumbent answered.",
+      "remedy": "Ask again if the asset is still held."
+    },
+    {
+      "code": "escalation_requires_incumbent_editor",
+      "area": "escalation",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "Only the member holding the valid Offline lease may accept, and the lease must still be valid at the moment of acceptance.",
+      "remedy": "No session is created from stale authority. Both participants are told to refresh."
+    },
+    {
+      "code": "escalation_self_request_forbidden",
+      "area": "escalation",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "A user cannot ask themselves to escalate, including from a second device.",
+      "remedy": "Close the other editor instead."
+    },
+    {
+      "code": "asset_already_in_realtime_session",
+      "area": "escalation",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "The map is already in a linked Real-time session; a second session is never created for one map.",
+      "remedy": "Join the existing session through the ordinary Real-time join rules."
+    },
+    {
+      "code": "linked_session_creation_failed",
+      "area": "escalation",
+      "http_status": 502,
+      "retryable": true,
+      "summary": "The flush, the CAS, the quota check, the dependency resolution or the AUC session creation failed, so no session exists.",
+      "remedy": "The map returns to a truthful Offline or idle state rather than to a phantom lock, and the exact failing step is reported. This is the one reason in this file that is ALSO an incident, because it is a component failing rather than a rule refusing."
+    },
+    {
+      "code": "annotation_thread_not_found",
+      "area": "annotation",
+      "http_status": 404,
+      "retryable": false,
+      "summary": "No such thread in this workspace.",
+      "remedy": "Reload."
+    },
+    {
+      "code": "annotation_not_editable_by_caller",
+      "area": "annotation",
+      "http_status": 403,
+      "retryable": false,
+      "summary": "The caller may not edit or delete this message, or may not resolve this thread.",
+      "remedy": "Knight may create and reply and may not resolve; Pilgrim reads only."
+    },
+    {
+      "code": "annotation_body_too_long",
+      "area": "annotation",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "The message exceeds the contract's bound.",
+      "remedy": "Shorten it."
+    },
+    {
+      "code": "idempotency_key_conflict",
+      "area": "request",
+      "http_status": 409,
+      "retryable": false,
+      "summary": "This idempotency key was already used for a request with a different payload.",
+      "remedy": "A retry of the same request replays the original outcome; a different request needs a different key."
+    },
+    {
+      "code": "unsupported_contract_version",
+      "area": "request",
+      "http_status": 422,
+      "retryable": false,
+      "summary": "The request declares a contract version this server does not implement.",
+      "remedy": "The refusal names the versions the server accepts. A client is never silently reinterpreted under different rules."
+    }
+  ]
+}

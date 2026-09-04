@@ -1,0 +1,207 @@
+{
+  "capability_schema_version": "aub-offline-workspace-roles/1.0",
+  "scope": "offline_workspace",
+  "description": "The canonical role -> capability table for OFFLINE Shared Workspaces. It is a different scope from the Real-time table AUB publishes as `aub-collaboration-roles/1.0` (internal/membership/capability.go): the four role NAMES are the same four names, and nothing else about the two tables is shared. A Real-time capability is what a participant may do inside one AUC session; an Offline capability is what a member may do inside one durable AUB workspace. Two scopes, two vocabularies, two versions — so that adding an Offline capability cannot silently widen a Real-time session, and so that a component holding one table can say which question it is answering.",
+  "roles": [
+    {
+      "role": "overlord",
+      "rank": 0,
+      "summary": "The workspace owner. Administers membership, roles, visibility and deletion, and is the only role that may detach an existing asset. Owns the workspace object, not the assets in it."
+    },
+    {
+      "role": "lord",
+      "rank": 1,
+      "summary": "A trusted collaborator. Edits and saves existing assets, contributes new ones, annotates and resolves, and may ask an incumbent editor to escalate a collision to Real-time. Administers nothing."
+    },
+    {
+      "role": "knight",
+      "rank": 2,
+      "summary": "A contributor. May upload and import NEW assets and may annotate and reply, and may not edit or save an asset that already exists. This is the whole point of the role: contribution without write access to somebody else's finished work."
+    },
+    {
+      "role": "pilgrim",
+      "rank": 3,
+      "summary": "Read-only, and the role a public joiner enters as. Views, downloads and reads annotations; writes nothing."
+    }
+  ],
+  "capabilities": [
+    {
+      "capability": "workspace.read",
+      "summary": "Read workspace metadata: name, description, visibility, owner, members and their roles, assets and their owners."
+    },
+    {
+      "capability": "workspace.activity.read",
+      "summary": "Read the workspace activity record — who did what, to which asset or member, when."
+    },
+    {
+      "capability": "workspace.metadata.write",
+      "summary": "Change name, description and max_members. Uses the workspace metadata revision as its write precondition."
+    },
+    {
+      "capability": "workspace.visibility.change",
+      "summary": "Change the workspace between public and private, subject to the asset-visibility invariant."
+    },
+    {
+      "capability": "workspace.delete",
+      "summary": "Delete the workspace."
+    },
+    {
+      "capability": "member.invite",
+      "summary": "Create a private, role-bearing, single-use invitation for a known account."
+    },
+    {
+      "capability": "member.role.change",
+      "summary": "Change another member's workspace role."
+    },
+    {
+      "capability": "member.remove",
+      "summary": "Remove another member, which detaches every asset that member owns."
+    },
+    {
+      "capability": "member.leave",
+      "summary": "Leave the workspace voluntarily, which detaches every asset the leaver owns. NOT held by the Overlord: an owner who left would leave the workspace ownerless, and V1 has no ownership transfer."
+    },
+    {
+      "capability": "role_request.create",
+      "summary": "Ask the Overlord for a higher role, with an optional bounded plain-text message. NOT held by the Overlord, who has nothing above them to request."
+    },
+    {
+      "capability": "role_request.resolve",
+      "summary": "Approve or deny a pending role request."
+    },
+    {
+      "capability": "asset.read",
+      "summary": "See and open the workspace's assets that this membership grants access to."
+    },
+    {
+      "capability": "asset.download",
+      "summary": "Download an accessible asset."
+    },
+    {
+      "capability": "asset.upload",
+      "summary": "Upload a NEW asset into the workspace. The uploader owns it and is charged its storage."
+    },
+    {
+      "capability": "asset.import",
+      "summary": "Attach an asset the caller already owns elsewhere. Ownership and storage accounting do not change."
+    },
+    {
+      "capability": "asset.edit",
+      "summary": "Acquire the exclusive Offline edit lease on an EXISTING mutable asset. Holding the lease is not the same as being allowed to save; asset.save is the separate authority, exactly as the Real-time table separates map.write from map.save."
+    },
+    {
+      "capability": "asset.save",
+      "summary": "Commit a new durable revision of an existing asset. Always additionally gated by the lease, the revision CAS and the ASSET OWNER's storage state, never by the saver's."
+    },
+    {
+      "capability": "asset.detach",
+      "summary": "Remove an existing asset from the workspace. Detaching never deletes the asset, never transfers ownership and never moves the storage charge."
+    },
+    {
+      "capability": "annotation.read",
+      "summary": "Read workspace annotation threads and replies."
+    },
+    {
+      "capability": "annotation.write",
+      "summary": "Create annotation threads and post replies."
+    },
+    {
+      "capability": "annotation.resolve",
+      "summary": "Resolve and reopen an annotation thread. Knight deliberately does not hold it: a contributor may raise a point and may not declare it settled."
+    },
+    {
+      "capability": "escalation.request",
+      "summary": "Ask the incumbent Offline editor of a blocked map to escalate it into a Real-time session. Held only by roles that could have edited the map, because a member who may not edit is directed to the role-upgrade path instead of using Real-time as a permission bypass."
+    },
+    {
+      "capability": "escalation.accept",
+      "summary": "Accept such a request and become the linked session's Overlord. Always additionally gated by actually holding the valid Offline lease on that asset; the capability is the role half of the question only."
+    }
+  ],
+  "matrix": {
+    "overlord": [
+      "workspace.read",
+      "workspace.activity.read",
+      "workspace.metadata.write",
+      "workspace.visibility.change",
+      "workspace.delete",
+      "member.invite",
+      "member.role.change",
+      "member.remove",
+      "role_request.resolve",
+      "asset.read",
+      "asset.download",
+      "asset.upload",
+      "asset.import",
+      "asset.edit",
+      "asset.save",
+      "asset.detach",
+      "annotation.read",
+      "annotation.write",
+      "annotation.resolve",
+      "escalation.request",
+      "escalation.accept"
+    ],
+    "lord": [
+      "workspace.read",
+      "workspace.activity.read",
+      "member.leave",
+      "role_request.create",
+      "asset.read",
+      "asset.download",
+      "asset.upload",
+      "asset.import",
+      "asset.edit",
+      "asset.save",
+      "annotation.read",
+      "annotation.write",
+      "annotation.resolve",
+      "escalation.request",
+      "escalation.accept"
+    ],
+    "knight": [
+      "workspace.read",
+      "workspace.activity.read",
+      "member.leave",
+      "role_request.create",
+      "asset.read",
+      "asset.download",
+      "asset.upload",
+      "asset.import",
+      "annotation.read",
+      "annotation.write"
+    ],
+    "pilgrim": [
+      "workspace.read",
+      "workspace.activity.read",
+      "member.leave",
+      "role_request.create",
+      "asset.read",
+      "asset.download",
+      "annotation.read"
+    ]
+  },
+  "non_nesting": [
+    {
+      "capability": "member.leave",
+      "held_by": ["lord", "knight", "pilgrim"],
+      "why": "The Overlord may not leave. Until workspace ownership transfer exists, an Overlord's only exits are to keep the workspace or delete it, so `leave` is the one capability the most privileged role does not hold."
+    },
+    {
+      "capability": "role_request.create",
+      "held_by": ["lord", "knight", "pilgrim"],
+      "why": "There is no role above Overlord to request, and a workspace cannot be requested by asking for it."
+    }
+  ],
+  "additional_gates": {
+    "asset.edit": ["asset is mutable", "no other valid lease on the asset", "asset not in a linked Real-time session"],
+    "asset.save": ["caller holds the valid lease for this client instance", "expected_revision equals current revision", "asset owner's storage accepts the write"],
+    "asset.detach": ["asset is not offline_editing, realtime_starting or realtime_active", "asset is not a pinned dependency of an active edit or session"],
+    "escalation.accept": ["caller holds the valid lease on the asset", "asset is not already in a linked Real-time session"],
+    "member.remove": ["target is not the workspace owner", "target holds no active lease", "no asset the target owns is a pinned dependency of active work"],
+    "member.leave": ["caller is not the workspace owner", "caller holds no active lease", "no asset the caller owns is a pinned dependency of active work"],
+    "member.role.change": ["target is not the workspace owner", "target holds no active lease when the change removes asset.edit"],
+    "workspace.visibility.change": ["private -> public requires every attached asset to be public"],
+    "workspace.delete": ["no asset in the workspace is offline_editing, realtime_starting or realtime_active"]
+  }
+}

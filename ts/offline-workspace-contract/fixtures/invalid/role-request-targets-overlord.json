@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "id": "rolereq00000001",
+  "scope_type": "workspace",
+  "scope_id": "wsprivate000001",
+  "requester_user_id": "user000000000c3",
+  "current_role": "lord",
+  "requested_role": "overlord",
+  "state": "pending",
+  "created_at": "2026-08-31T09:15:00.000Z",
+  "updated_at": "2026-08-31T09:15:00.000Z",
+  "expires_at": "2026-08-31T09:15:00.000Z"
+}

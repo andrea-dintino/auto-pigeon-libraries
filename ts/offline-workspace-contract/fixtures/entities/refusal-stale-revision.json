@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "reason": "stale_asset_revision",
+  "http_status": 409,
+  "message": "expected 17, current 18",
+  "subject_type": "asset",
+  "subject_id": "map000000000001",
+  "current_revision": 18,
+  "correlation_id": "0123456789abcdef0123456789abcdef"
+}

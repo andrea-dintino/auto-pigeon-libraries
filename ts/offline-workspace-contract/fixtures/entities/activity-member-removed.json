@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "id": "activity0000002",
+  "workspace_id": "wsprivate000001",
+  "actor_user_id": "user000000000a1",
+  "action": "member.removed",
+  "subject_type": "member",
+  "subject_id": "member000000002",
+  "occurred_at": "2026-08-31T10:15:00.000Z",
+  "detail": {
+    "previous_role": "knight",
+    "detach_cause": "member_removed"
+  }
+}

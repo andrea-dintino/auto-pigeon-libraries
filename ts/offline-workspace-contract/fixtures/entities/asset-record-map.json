@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "asset_id": "map000000000001",
+  "asset_type": "map",
+  "owner_user_id": "user000000000b2",
+  "visibility": "private",
+  "revision": 17,
+  "size_bytes": 4194304,
+  "last_modified_by_user_id": "user000000000a1",
+  "workspace_id": "wsprivate000001",
+  "mutable": true,
+  "created_at": "2026-08-31T09:15:00.000Z",
+  "updated_at": "2026-08-31T10:15:00.000Z"
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "workspace_id": "wspublic0000001",
+  "name": "Open Quake 1 Jam",
+  "description_excerpt": "Anyone may join and look around.",
+  "owner_display_name": "mapper_one",
+  "member_count": 12,
+  "max_members": 40,
+  "asset_count": 9,
+  "map_count": 4,
+  "join_available": true
+}

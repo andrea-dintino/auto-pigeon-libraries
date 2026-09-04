@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "id": "attach000000002",
+  "workspace_id": "wsprivate000001",
+  "asset_id": "wad000000000001",
+  "asset_type": "texture_source",
+  "collaboration_state": "unattached",
+  "attached_at": "2026-08-31T09:15:00.000Z",
+  "attached_by_user_id": "user000000000c3",
+  "detached_at": "2026-08-31T10:15:00.000Z",
+  "detach_cause": "member_left"
+}

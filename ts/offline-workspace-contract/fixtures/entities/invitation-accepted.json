@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "id": "invite000000002",
+  "workspace_id": "wsprivate000001",
+  "invited_user_id": "user000000000b2",
+  "assigned_role": "knight",
+  "token_hash": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+  "created_by_user_id": "user000000000a1",
+  "state": "accepted",
+  "created_at": "2026-08-31T09:15:00.000Z",
+  "expires_at": "2026-09-14T09:15:00.000Z",
+  "used_at": "2026-08-31T10:15:00.000Z"
+}

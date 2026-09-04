@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "description": "The asset types a Shared Workspace can hold, derived from AUB's actual asset model rather than transcribed from a product document: `maps`, `texture_sources`, `entity_catalogues`, `game_profiles` and the user prefab packages are collections that already exist. Two flags per type carry the V1 restrictions that the rest of the contract leans on. `mutable` says whether the type has an in-place edit path and therefore an Offline edit lease at all; `realtime_eligible` says whether it can escalate into an AUC session. Only the map is either, and that is the V1 decision, not an oversight: there is no whole-workspace session and no live collaborative editing of a texture binary.",
+  "asset_types": [
+    {
+      "asset_type": "map",
+      "aub_collection": "maps",
+      "mutable": true,
+      "realtime_eligible": true,
+      "summary": "An APMap document. The only type with an Offline edit lease and the only Real-time primary object."
+    },
+    {
+      "asset_type": "texture_source",
+      "aub_collection": "texture_sources",
+      "mutable": false,
+      "realtime_eligible": false,
+      "summary": "A WAD or a texture package. It has durable revisions — a replacement upload bumps one — but no in-place edit path, so it takes no lease. A future type that gains one gets its own exclusive Offline lock; it does not get the map's escalation path with it."
+    },
+    {
+      "asset_type": "entity_catalogue",
+      "aub_collection": "entity_catalogues",
+      "mutable": false,
+      "realtime_eligible": false,
+      "summary": "Entity definitions a map is authored against."
+    },
+    {
+      "asset_type": "game_profile",
+      "aub_collection": "game_profiles",
+      "mutable": false,
+      "realtime_eligible": false,
+      "summary": "A game profile. Platform-owned default profiles are referenced by a map without becoming workspace assets; only a user-owned profile is attachable."
+    },
+    {
+      "asset_type": "prefab_package",
+      "aub_collection": "user_prefab_package_files",
+      "mutable": false,
+      "realtime_eligible": false,
+      "summary": "A user prefab package."
+    }
+  ],
+  "revision_note": "Every attachable asset carries a revision whether or not it is `mutable`. Mutability decides whether there is a lease; the revision decides whether a write is accepted, and a replacement upload of an immutable type is a write like any other."
+}

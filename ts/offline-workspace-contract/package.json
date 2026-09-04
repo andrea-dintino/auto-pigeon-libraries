@@ -1,0 +1,35 @@
+{
+  "name": "@auto-pigeon/offline-workspace-contract",
+  "version": "1.0.0",
+  "description": "The cross-stack contract for Offline Shared Workspaces: versioned entity schemas, the Offline role -> capability table, the stable refusal-code vocabulary, the state machines with their guards, idempotency identities and timestamps, and the product's fixed numbers. Contract data plus a dependency-free reference implementation — no persistence, no endpoints, no UI, no running service.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./src/index.mjs",
+  "types": "./src/index.d.ts",
+  "files": [
+    "schema",
+    "src",
+    "fixtures",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.mjs"
+    },
+    "./schema/entities": "./schema/offline-workspace-entities-1.0.schema.json",
+    "./schema/roles": "./schema/offline-workspace-roles.json",
+    "./schema/reasons": "./schema/offline-workspace-reason-codes.json",
+    "./schema/machines": "./schema/offline-workspace-state-machines.json",
+    "./schema/policy": "./schema/offline-workspace-policy.json",
+    "./schema/asset-types": "./schema/offline-workspace-asset-types.json",
+    "./fixtures": "./fixtures/index.json",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0"
+  }
+}

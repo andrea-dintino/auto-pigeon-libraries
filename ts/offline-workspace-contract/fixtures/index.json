@@ -1,0 +1,2362 @@
+{
+  "schema_version": "1.0",
+  "capability_schema_version": "aub-offline-workspace-roles/1.0",
+  "description": "The cross-language fixture set. Every case here is run by this package's own node tests AND by each consuming repository's adapter test, against the same files: a Go reader that disagrees with the JavaScript reference implementation about a capability, a transition or a document's validity fails its own suite rather than being discovered later by a user. `capability_matrix` and `transition_matrix` are exhaustive and are GOLDEN — they are generated from the contract and committed, so a change to the table that nobody meant to make fails a test instead of propagating.",
+  "entities": [
+    {
+      "file": "entities/workspace-private.json",
+      "entity": "workspace",
+      "valid": true
+    },
+    {
+      "file": "entities/workspace-public.json",
+      "entity": "workspace",
+      "valid": true
+    },
+    {
+      "file": "entities/workspace-public-card.json",
+      "entity": "workspace_public_card",
+      "valid": true
+    },
+    {
+      "file": "entities/workspace-member-lord.json",
+      "entity": "workspace_member",
+      "valid": true
+    },
+    {
+      "file": "entities/workspace-member-left.json",
+      "entity": "workspace_member",
+      "valid": true
+    },
+    {
+      "file": "entities/workspace-asset-editing.json",
+      "entity": "workspace_asset",
+      "valid": true
+    },
+    {
+      "file": "entities/workspace-asset-detached.json",
+      "entity": "workspace_asset",
+      "valid": true
+    },
+    {
+      "file": "entities/asset-record-map.json",
+      "entity": "asset_record",
+      "valid": true
+    },
+    {
+      "file": "entities/asset-record-unattached-wad.json",
+      "entity": "asset_record",
+      "valid": true
+    },
+    {
+      "file": "entities/dependency-entry-platform.json",
+      "entity": "dependency_entry",
+      "valid": true
+    },
+    {
+      "file": "entities/dependency-manifest-pinned.json",
+      "entity": "dependency_manifest",
+      "valid": true
+    },
+    {
+      "file": "entities/invitation-pending.json",
+      "entity": "workspace_invitation",
+      "valid": true
+    },
+    {
+      "file": "entities/invitation-accepted.json",
+      "entity": "workspace_invitation",
+      "valid": true
+    },
+    {
+      "file": "entities/role-request-pending.json",
+      "entity": "role_request",
+      "valid": true
+    },
+    {
+      "file": "entities/lease-active.json",
+      "entity": "asset_edit_lease",
+      "valid": true
+    },
+    {
+      "file": "entities/lease-expired.json",
+      "entity": "asset_edit_lease",
+      "valid": true
+    },
+    {
+      "file": "entities/escalation-request-pending.json",
+      "entity": "escalation_request",
+      "valid": true
+    },
+    {
+      "file": "entities/linked-session-active.json",
+      "entity": "linked_session",
+      "valid": true
+    },
+    {
+      "file": "entities/linked-session-failed.json",
+      "entity": "linked_session",
+      "valid": true
+    },
+    {
+      "file": "entities/annotation-anchor-orphaned.json",
+      "entity": "annotation_anchor",
+      "valid": true
+    },
+    {
+      "file": "entities/annotation-thread-open.json",
+      "entity": "annotation_thread",
+      "valid": true
+    },
+    {
+      "file": "entities/annotation-message.json",
+      "entity": "annotation_message",
+      "valid": true
+    },
+    {
+      "file": "entities/annotation-read-state.json",
+      "entity": "annotation_read_state",
+      "valid": true
+    },
+    {
+      "file": "entities/activity-asset-saved.json",
+      "entity": "activity_event",
+      "valid": true
+    },
+    {
+      "file": "entities/activity-member-removed.json",
+      "entity": "activity_event",
+      "valid": true
+    },
+    {
+      "file": "entities/blocking-reference-hidden.json",
+      "entity": "blocking_reference",
+      "valid": true
+    },
+    {
+      "file": "entities/refusal-stale-revision.json",
+      "entity": "refusal",
+      "valid": true
+    },
+    {
+      "file": "entities/refusal-insufficient-role.json",
+      "entity": "refusal",
+      "valid": true
+    },
+    {
+      "file": "entities/refusal-asset-elsewhere.json",
+      "entity": "refusal",
+      "valid": true
+    }
+  ],
+  "invalid": [
+    {
+      "file": "invalid/workspace-unknown-field.json",
+      "entity": "workspace",
+      "valid": false,
+      "error_path": "mode",
+      "why": "The one field the older backlog wanted and this contract refuses: a workspace-wide OFFLINE/LIVE mode. Collaboration state belongs to the asset, so one map can be in a session while another is being edited and a third is idle."
+    },
+    {
+      "file": "invalid/workspace-timestamp-without-milliseconds.json",
+      "entity": "workspace",
+      "valid": false,
+      "error_path": "created_at",
+      "why": "Second-resolution timestamps compare equal across a lease boundary often enough to matter; the contract fixes milliseconds and a literal Z."
+    },
+    {
+      "file": "invalid/workspace-empty-name.json",
+      "entity": "workspace",
+      "valid": false,
+      "error_path": "name",
+      "why": "A workspace with no name is a workspace nobody can refer to in a modal."
+    },
+    {
+      "file": "invalid/workspace-max-members-over-ceiling.json",
+      "entity": "workspace",
+      "valid": false,
+      "error_path": "max_members",
+      "why": "An Overlord chooses max_members; the platform ceiling is not theirs to raise."
+    },
+    {
+      "file": "invalid/member-historical-role.json",
+      "entity": "workspace_member",
+      "valid": false,
+      "error_path": "role",
+      "why": "`peasant` is the pre-migration role name. AUB rewrote every stored row years of prompts ago and AUC refuses it on the wire; accepting it here would quietly readmit it through a new door."
+    },
+    {
+      "file": "invalid/asset-record-workspace-list.json",
+      "entity": "asset_record",
+      "valid": false,
+      "error_path": "workspace_id",
+      "why": "The one-workspace-per-asset invariant is structural: workspace_id is a single nullable id, so there is nowhere to write a second workspace even by accident."
+    },
+    {
+      "file": "invalid/asset-record-negative-revision.json",
+      "entity": "asset_record",
+      "valid": false,
+      "error_path": "revision",
+      "why": "Revisions count up from zero and never down."
+    },
+    {
+      "file": "invalid/asset-record-unknown-asset-type.json",
+      "entity": "asset_record",
+      "valid": false,
+      "error_path": "asset_type",
+      "why": "A type the vocabulary does not name has no mutable or realtime_eligible answer, so nothing downstream can decide whether it takes a lease."
+    },
+    {
+      "file": "invalid/lease-client-instance-not-hex.json",
+      "entity": "asset_edit_lease",
+      "valid": false,
+      "error_path": "client_instance_id",
+      "why": "A human-readable instance label is a label two devices can collide on. The same-account-second-browser block depends on this value being unforgeably distinct."
+    },
+    {
+      "file": "invalid/lease-unknown-state.json",
+      "entity": "asset_edit_lease",
+      "valid": false,
+      "error_path": "state",
+      "why": "There is no lease takeover in V1, so there is no state for one."
+    },
+    {
+      "file": "invalid/invitation-assigns-overlord.json",
+      "entity": "workspace_invitation",
+      "valid": false,
+      "error_path": "assigned_role",
+      "why": "Workspace ownership is not a role grant, so an invitation cannot carry it. Exactly one owner, always."
+    },
+    {
+      "file": "invalid/invitation-email-instead-of-account.json",
+      "entity": "workspace_invitation",
+      "valid": false,
+      "error_path": "invited_user_id",
+      "why": "An e-mail address in a durable collaboration record is an e-mail address that eventually reaches a log or a telemetry event. V1 invites an account id."
+    },
+    {
+      "file": "invalid/role-request-targets-overlord.json",
+      "entity": "role_request",
+      "valid": false,
+      "error_path": "requested_role",
+      "why": "Ownership cannot be requested through the upgrade mechanism."
+    },
+    {
+      "file": "invalid/escalation-unknown-state.json",
+      "entity": "escalation_request",
+      "valid": false,
+      "error_path": "state",
+      "why": "Nothing accepts an escalation on the incumbent's behalf. The person holding the current work decides."
+    },
+    {
+      "file": "invalid/linked-session-negative-base-revision.json",
+      "entity": "linked_session",
+      "valid": false,
+      "error_path": "base_revision",
+      "why": "A session starts from an exact saved revision. `-1` is what an unsaved browser snapshot would look like."
+    },
+    {
+      "file": "invalid/annotation-message-empty-body.json",
+      "entity": "annotation_message",
+      "valid": false,
+      "error_path": "body",
+      "why": "An empty note is a notification with nothing in it."
+    },
+    {
+      "file": "invalid/activity-freeform-detail.json",
+      "entity": "activity_event",
+      "valid": false,
+      "error_path": "detail.note",
+      "why": "The audit record's detail is a closed set of typed facts precisely so that annotation text, geometry and addresses cannot end up in it."
+    },
+    {
+      "file": "invalid/refusal-uppercase-reason.json",
+      "entity": "refusal",
+      "valid": false,
+      "error_path": "reason",
+      "why": "The taxonomy is lower_snake_case, matching AUB's existing reason shape. A second casing is a second vocabulary."
+    },
+    {
+      "file": "invalid/refusal-future-contract-version.json",
+      "entity": "refusal",
+      "valid": false,
+      "error_path": "schema_version",
+      "why": "A record from a contract this build does not implement is refused with unsupported_contract_version, never read under whichever rules happen to be compiled in."
+    },
+    {
+      "file": "invalid/dependency-manifest-bad-hash.json",
+      "entity": "dependency_manifest",
+      "valid": false,
+      "error_path": "manifest_hash",
+      "why": "The hash is algorithm-prefixed so that comparing two manifests cannot silently compare two different digests."
+    }
+  ],
+  "capability_matrix": [
+    {
+      "role": "overlord",
+      "capability": "workspace.read",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "workspace.activity.read",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "workspace.metadata.write",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "workspace.visibility.change",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "workspace.delete",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "member.invite",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "member.role.change",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "member.remove",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "member.leave",
+      "allowed": false
+    },
+    {
+      "role": "overlord",
+      "capability": "role_request.create",
+      "allowed": false
+    },
+    {
+      "role": "overlord",
+      "capability": "role_request.resolve",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "asset.read",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "asset.download",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "asset.upload",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "asset.import",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "asset.edit",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "asset.save",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "asset.detach",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "annotation.read",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "annotation.write",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "annotation.resolve",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "escalation.request",
+      "allowed": true
+    },
+    {
+      "role": "overlord",
+      "capability": "escalation.accept",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "workspace.read",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "workspace.activity.read",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "workspace.metadata.write",
+      "allowed": false
+    },
+    {
+      "role": "lord",
+      "capability": "workspace.visibility.change",
+      "allowed": false
+    },
+    {
+      "role": "lord",
+      "capability": "workspace.delete",
+      "allowed": false
+    },
+    {
+      "role": "lord",
+      "capability": "member.invite",
+      "allowed": false
+    },
+    {
+      "role": "lord",
+      "capability": "member.role.change",
+      "allowed": false
+    },
+    {
+      "role": "lord",
+      "capability": "member.remove",
+      "allowed": false
+    },
+    {
+      "role": "lord",
+      "capability": "member.leave",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "role_request.create",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "role_request.resolve",
+      "allowed": false
+    },
+    {
+      "role": "lord",
+      "capability": "asset.read",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "asset.download",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "asset.upload",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "asset.import",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "asset.edit",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "asset.save",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "asset.detach",
+      "allowed": false
+    },
+    {
+      "role": "lord",
+      "capability": "annotation.read",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "annotation.write",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "annotation.resolve",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "escalation.request",
+      "allowed": true
+    },
+    {
+      "role": "lord",
+      "capability": "escalation.accept",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "workspace.read",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "workspace.activity.read",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "workspace.metadata.write",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "workspace.visibility.change",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "workspace.delete",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "member.invite",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "member.role.change",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "member.remove",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "member.leave",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "role_request.create",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "role_request.resolve",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "asset.read",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "asset.download",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "asset.upload",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "asset.import",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "asset.edit",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "asset.save",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "asset.detach",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "annotation.read",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "annotation.write",
+      "allowed": true
+    },
+    {
+      "role": "knight",
+      "capability": "annotation.resolve",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "escalation.request",
+      "allowed": false
+    },
+    {
+      "role": "knight",
+      "capability": "escalation.accept",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "workspace.read",
+      "allowed": true
+    },
+    {
+      "role": "pilgrim",
+      "capability": "workspace.activity.read",
+      "allowed": true
+    },
+    {
+      "role": "pilgrim",
+      "capability": "workspace.metadata.write",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "workspace.visibility.change",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "workspace.delete",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "member.invite",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "member.role.change",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "member.remove",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "member.leave",
+      "allowed": true
+    },
+    {
+      "role": "pilgrim",
+      "capability": "role_request.create",
+      "allowed": true
+    },
+    {
+      "role": "pilgrim",
+      "capability": "role_request.resolve",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "asset.read",
+      "allowed": true
+    },
+    {
+      "role": "pilgrim",
+      "capability": "asset.download",
+      "allowed": true
+    },
+    {
+      "role": "pilgrim",
+      "capability": "asset.upload",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "asset.import",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "asset.edit",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "asset.save",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "asset.detach",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "annotation.read",
+      "allowed": true
+    },
+    {
+      "role": "pilgrim",
+      "capability": "annotation.write",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "annotation.resolve",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "escalation.request",
+      "allowed": false
+    },
+    {
+      "role": "pilgrim",
+      "capability": "escalation.accept",
+      "allowed": false
+    }
+  ],
+  "transition_matrix": [
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "attach",
+      "to": [
+        "workspace_idle"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "asset_already_in_another_workspace",
+        "private_asset_in_public_workspace",
+        "asset_owner_storage_unavailable",
+        "asset_owner_quota_exceeded"
+      ]
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "detach",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "forced_detach",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "acquire_lease",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "heartbeat",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "save",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "release_lease",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "lease_expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "accept_escalation",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "session_created",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "session_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "unattached",
+      "event": "session_ended",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "attach",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "detach",
+      "to": [
+        "unattached"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "asset_detach_blocked_by_active_work",
+        "asset_dependency_pinned"
+      ]
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "forced_detach",
+      "to": [
+        "unattached"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "acquire_lease",
+      "to": [
+        "offline_editing"
+      ],
+      "refusals": [
+        "edit_lease_not_available_for_role",
+        "asset_not_mutable",
+        "edit_lease_held_by_other_user",
+        "edit_lease_held_by_other_client"
+      ]
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "heartbeat",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "save",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "release_lease",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "lease_expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "accept_escalation",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "session_created",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "session_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "workspace_idle",
+      "event": "session_ended",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "attach",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "detach",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "forced_detach",
+      "to": [
+        "unattached"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "acquire_lease",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "heartbeat",
+      "to": [
+        "offline_editing"
+      ],
+      "refusals": [
+        "edit_lease_not_held",
+        "edit_lease_expired"
+      ]
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "save",
+      "to": [
+        "offline_editing"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "edit_lease_not_held",
+        "edit_lease_expired",
+        "stale_asset_revision",
+        "asset_owner_storage_unavailable",
+        "asset_owner_quota_exceeded"
+      ]
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "release_lease",
+      "to": [
+        "workspace_idle"
+      ],
+      "refusals": [
+        "edit_lease_not_held"
+      ]
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "lease_expire",
+      "to": [
+        "workspace_idle"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "accept_escalation",
+      "to": [
+        "realtime_starting"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "escalation_requires_incumbent_editor",
+        "escalation_request_not_pending",
+        "escalation_request_expired",
+        "asset_not_realtime_eligible",
+        "asset_already_in_realtime_session"
+      ]
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "session_created",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "session_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "offline_editing",
+      "event": "session_ended",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "attach",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "detach",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "forced_detach",
+      "to": [
+        "unattached"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "acquire_lease",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "heartbeat",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "save",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "release_lease",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "lease_expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "accept_escalation",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "session_created",
+      "to": [
+        "realtime_active"
+      ],
+      "refusals": [
+        "stale_asset_revision",
+        "asset_owner_storage_unavailable",
+        "asset_owner_quota_exceeded",
+        "dependency_not_accessible",
+        "dependency_missing",
+        "linked_session_creation_failed"
+      ]
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "session_failed",
+      "to": [
+        "offline_editing",
+        "workspace_idle"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_starting",
+      "event": "session_ended",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "attach",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "detach",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "forced_detach",
+      "to": [
+        "unattached"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "acquire_lease",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "heartbeat",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "save",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "release_lease",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "lease_expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "accept_escalation",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "session_created",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "session_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_collaboration",
+      "from": "realtime_active",
+      "event": "session_ended",
+      "to": [
+        "workspace_idle"
+      ],
+      "refusals": [
+        "linked_session_creation_failed"
+      ]
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "active",
+      "event": "heartbeat",
+      "to": [
+        "active"
+      ],
+      "refusals": [
+        "edit_lease_not_held",
+        "edit_lease_expired"
+      ]
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "active",
+      "event": "release",
+      "to": [
+        "released"
+      ],
+      "refusals": [
+        "edit_lease_not_held"
+      ]
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "active",
+      "event": "hand_over",
+      "to": [
+        "released"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "active",
+      "event": "expire",
+      "to": [
+        "expired"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "active",
+      "event": "revoke",
+      "to": [
+        "revoked"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "released",
+      "event": "heartbeat",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "released",
+      "event": "release",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "released",
+      "event": "hand_over",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "released",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "released",
+      "event": "revoke",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "expired",
+      "event": "heartbeat",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "expired",
+      "event": "release",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "expired",
+      "event": "hand_over",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "expired",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "expired",
+      "event": "revoke",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "revoked",
+      "event": "heartbeat",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "revoked",
+      "event": "release",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "revoked",
+      "event": "hand_over",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "revoked",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "asset_edit_lease",
+      "from": "revoked",
+      "event": "revoke",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace",
+      "from": "active",
+      "event": "update_metadata",
+      "to": [
+        "active"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "workspace_metadata_stale_revision",
+        "workspace_description_unsafe_link",
+        "workspace_max_members_below_current",
+        "workspace_max_members_above_platform_limit"
+      ]
+    },
+    {
+      "machine": "workspace",
+      "from": "active",
+      "event": "change_visibility",
+      "to": [
+        "active"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "workspace_visibility_blocked_by_private_assets"
+      ]
+    },
+    {
+      "machine": "workspace",
+      "from": "active",
+      "event": "delete",
+      "to": [
+        "deleted"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "workspace_delete_blocked_by_active_work"
+      ]
+    },
+    {
+      "machine": "workspace",
+      "from": "deleted",
+      "event": "update_metadata",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace",
+      "from": "deleted",
+      "event": "change_visibility",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace",
+      "from": "deleted",
+      "event": "delete",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_membership",
+      "from": "active",
+      "event": "change_role",
+      "to": [
+        "active"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "workspace_owner_immutable",
+        "role_change_blocked_by_active_lease"
+      ]
+    },
+    {
+      "machine": "workspace_membership",
+      "from": "active",
+      "event": "remove",
+      "to": [
+        "removed"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "workspace_owner_immutable",
+        "member_removal_blocked_by_active_work"
+      ]
+    },
+    {
+      "machine": "workspace_membership",
+      "from": "active",
+      "event": "leave",
+      "to": [
+        "left"
+      ],
+      "refusals": [
+        "workspace_owner_cannot_leave",
+        "member_removal_blocked_by_active_work"
+      ]
+    },
+    {
+      "machine": "workspace_membership",
+      "from": "removed",
+      "event": "change_role",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_membership",
+      "from": "removed",
+      "event": "remove",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_membership",
+      "from": "removed",
+      "event": "leave",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_membership",
+      "from": "left",
+      "event": "change_role",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_membership",
+      "from": "left",
+      "event": "remove",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_membership",
+      "from": "left",
+      "event": "leave",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "pending",
+      "event": "accept",
+      "to": [
+        "accepted"
+      ],
+      "refusals": [
+        "invitation_not_found",
+        "invitation_wrong_account",
+        "invitation_expired",
+        "invitation_already_used",
+        "invitation_revoked",
+        "already_a_workspace_member",
+        "workspace_not_found"
+      ]
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "pending",
+      "event": "decline",
+      "to": [
+        "declined"
+      ],
+      "refusals": [
+        "invitation_wrong_account"
+      ]
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "pending",
+      "event": "revoke",
+      "to": [
+        "revoked"
+      ],
+      "refusals": [
+        "insufficient_workspace_role"
+      ]
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "pending",
+      "event": "expire",
+      "to": [
+        "expired"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "accepted",
+      "event": "accept",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "accepted",
+      "event": "decline",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "accepted",
+      "event": "revoke",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "accepted",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "declined",
+      "event": "accept",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "declined",
+      "event": "decline",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "declined",
+      "event": "revoke",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "declined",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "revoked",
+      "event": "accept",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "revoked",
+      "event": "decline",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "revoked",
+      "event": "revoke",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "revoked",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "expired",
+      "event": "accept",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "expired",
+      "event": "decline",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "expired",
+      "event": "revoke",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "workspace_invitation",
+      "from": "expired",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "pending",
+      "event": "approve",
+      "to": [
+        "approved"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "role_request_cannot_target_overlord",
+        "role_request_not_pending",
+        "not_a_workspace_member"
+      ]
+    },
+    {
+      "machine": "role_request",
+      "from": "pending",
+      "event": "deny",
+      "to": [
+        "denied"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "role_request_not_pending"
+      ]
+    },
+    {
+      "machine": "role_request",
+      "from": "pending",
+      "event": "withdraw",
+      "to": [
+        "withdrawn"
+      ],
+      "refusals": [
+        "role_request_not_pending"
+      ]
+    },
+    {
+      "machine": "role_request",
+      "from": "pending",
+      "event": "expire",
+      "to": [
+        "expired"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "approved",
+      "event": "approve",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "approved",
+      "event": "deny",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "approved",
+      "event": "withdraw",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "approved",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "denied",
+      "event": "approve",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "denied",
+      "event": "deny",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "denied",
+      "event": "withdraw",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "denied",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "withdrawn",
+      "event": "approve",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "withdrawn",
+      "event": "deny",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "withdrawn",
+      "event": "withdraw",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "withdrawn",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "expired",
+      "event": "approve",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "expired",
+      "event": "deny",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "expired",
+      "event": "withdraw",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "role_request",
+      "from": "expired",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "pending",
+      "event": "accept",
+      "to": [
+        "accepted"
+      ],
+      "refusals": [
+        "escalation_requires_incumbent_editor",
+        "insufficient_workspace_role",
+        "escalation_request_expired",
+        "asset_not_realtime_eligible",
+        "asset_already_in_realtime_session"
+      ]
+    },
+    {
+      "machine": "escalation_request",
+      "from": "pending",
+      "event": "decline",
+      "to": [
+        "declined"
+      ],
+      "refusals": [
+        "escalation_requires_incumbent_editor"
+      ]
+    },
+    {
+      "machine": "escalation_request",
+      "from": "pending",
+      "event": "cancel",
+      "to": [
+        "cancelled"
+      ],
+      "refusals": [
+        "escalation_request_not_pending"
+      ]
+    },
+    {
+      "machine": "escalation_request",
+      "from": "pending",
+      "event": "expire",
+      "to": [
+        "expired"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "pending",
+      "event": "supersede",
+      "to": [
+        "superseded"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "accepted",
+      "event": "accept",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "accepted",
+      "event": "decline",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "accepted",
+      "event": "cancel",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "accepted",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "accepted",
+      "event": "supersede",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "declined",
+      "event": "accept",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "declined",
+      "event": "decline",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "declined",
+      "event": "cancel",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "declined",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "declined",
+      "event": "supersede",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "cancelled",
+      "event": "accept",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "cancelled",
+      "event": "decline",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "cancelled",
+      "event": "cancel",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "cancelled",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "cancelled",
+      "event": "supersede",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "expired",
+      "event": "accept",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "expired",
+      "event": "decline",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "expired",
+      "event": "cancel",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "expired",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "expired",
+      "event": "supersede",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "superseded",
+      "event": "accept",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "superseded",
+      "event": "decline",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "superseded",
+      "event": "cancel",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "superseded",
+      "event": "expire",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "escalation_request",
+      "from": "superseded",
+      "event": "supersede",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "starting",
+      "event": "session_created",
+      "to": [
+        "active"
+      ],
+      "refusals": [
+        "linked_session_creation_failed",
+        "dependency_not_accessible"
+      ]
+    },
+    {
+      "machine": "linked_session",
+      "from": "starting",
+      "event": "session_failed",
+      "to": [
+        "failed"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "starting",
+      "event": "end_requested",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "starting",
+      "event": "persisted",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "starting",
+      "event": "persist_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "starting",
+      "event": "recovered",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "active",
+      "event": "session_created",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "active",
+      "event": "session_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "active",
+      "event": "end_requested",
+      "to": [
+        "finalizing"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "active",
+      "event": "persisted",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "active",
+      "event": "persist_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "active",
+      "event": "recovered",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "finalizing",
+      "event": "session_created",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "finalizing",
+      "event": "session_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "finalizing",
+      "event": "end_requested",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "finalizing",
+      "event": "persisted",
+      "to": [
+        "ended"
+      ],
+      "refusals": [
+        "stale_asset_revision",
+        "asset_owner_storage_unavailable",
+        "asset_owner_quota_exceeded"
+      ]
+    },
+    {
+      "machine": "linked_session",
+      "from": "finalizing",
+      "event": "persist_failed",
+      "to": [
+        "failed"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "finalizing",
+      "event": "recovered",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "ended",
+      "event": "session_created",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "ended",
+      "event": "session_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "ended",
+      "event": "end_requested",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "ended",
+      "event": "persisted",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "ended",
+      "event": "persist_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "ended",
+      "event": "recovered",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "failed",
+      "event": "session_created",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "failed",
+      "event": "session_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "failed",
+      "event": "end_requested",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "failed",
+      "event": "persisted",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "failed",
+      "event": "persist_failed",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "linked_session",
+      "from": "failed",
+      "event": "recovered",
+      "to": [
+        "ended"
+      ],
+      "refusals": []
+    },
+    {
+      "machine": "annotation_thread",
+      "from": "open",
+      "event": "resolve",
+      "to": [
+        "resolved"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "annotation_not_editable_by_caller"
+      ]
+    },
+    {
+      "machine": "annotation_thread",
+      "from": "open",
+      "event": "reopen",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "annotation_thread",
+      "from": "resolved",
+      "event": "resolve",
+      "to": [],
+      "refusals": []
+    },
+    {
+      "machine": "annotation_thread",
+      "from": "resolved",
+      "event": "reopen",
+      "to": [
+        "open"
+      ],
+      "refusals": [
+        "insufficient_workspace_role",
+        "annotation_not_editable_by_caller"
+      ]
+    }
+  ]
+}

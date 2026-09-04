@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "asset_id": "map000000000001",
+  "asset_revision": 17,
+  "resolved_at": "2026-08-31T10:15:00.000Z",
+  "manifest_hash": "sha256:abababababababababababababababababababababababababababababababab",
+  "pinned": true,
+  "dependencies": [
+    {
+      "asset_id": "wad000000000001",
+      "asset_type": "texture_source",
+      "revision": 3,
+      "content_hash": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+      "owner_user_id": "user000000000c3",
+      "visibility": "private",
+      "platform_owned": false,
+      "resolved": true
+    },
+    {
+      "asset_id": "profilequake001",
+      "asset_type": "game_profile",
+      "revision": 1,
+      "platform_owned": true,
+      "resolved": true
+    }
+  ]
+}

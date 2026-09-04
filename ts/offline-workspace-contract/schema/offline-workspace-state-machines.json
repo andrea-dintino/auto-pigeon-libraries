@@ -1,0 +1,309 @@
+{
+  "schema_version": "1.0",
+  "description": "Every Offline Shared Workspace object that has a lifecycle, written once as an explicit machine: the legal states, the events that move between them, the guards that must hold, the refusal code an illegal or guarded-out attempt returns, the timestamps the transition sets, and the identity under which a retry is recognised as a retry. A transition that is not listed here is not legal, and 'not listed' is the whole definition — a server implementing this file refuses by default rather than by omission.",
+  "conventions": {
+    "timestamps": "RFC 3339 UTC with milliseconds and a literal Z, matching the incident contract's occurred_at. Every entity carries created_at and updated_at; a transition names the additional fields it sets. Server clock only: no client-supplied timestamp is ever authoritative for expiry.",
+    "idempotency": "Every mutating request carries idempotency_key, 32 lowercase hex, minted by the client. `identity` on a transition is the tuple that makes one logical operation recognisable independently of that key: a server MAY use it to collapse a retry that arrived without one, and MUST use it to reject a key replayed against a different payload (idempotency_key_conflict). `on_replay: return_current` means a repeat of a transition that already happened returns the current object and succeeds; `on_replay: conflict` means the repeat is a genuinely new attempt and is refused with the transition's refusal code.",
+    "guards": "A guard is a condition evaluated by AUB inside the same transaction as the state write. Guards are the reason CAS is still mandatory under a lease: the lease makes a collision unlikely and the guard makes a collision impossible.",
+    "multiple_targets": "Where one (from, event) pair appears more than once, the guards are mutually exclusive and select between the targets. Nothing here is nondeterministic."
+  },
+  "machines": [
+    {
+      "id": "asset_collaboration",
+      "subject": "workspace_asset",
+      "description": "The collaboration state of ONE asset. There is deliberately no workspace-wide Offline/Live mode: a workspace can hold a map in a Real-time session, a map with an Offline editor, an idle map and a freshly uploaded WAD at the same instant, and a session on one of them freezes none of the others.",
+      "initial": "unattached",
+      "states": [
+        { "name": "unattached", "terminal": false, "description": "The asset exists in its owner's account and belongs to no Shared Workspace. workspace_id is null." },
+        { "name": "workspace_idle", "terminal": false, "description": "Attached to exactly one workspace, nobody holding it. Readable and downloadable by the roles that may; detachable by the Overlord." },
+        { "name": "offline_editing", "terminal": false, "description": "Exactly one member holds the exclusive Offline lease. Saves are theirs alone and still pass revision CAS." },
+        { "name": "realtime_starting", "terminal": false, "description": "A short server-owned transition. Not a user-facing mode and not a state a client may put an asset into: AUB holds it only while it flushes, checks and creates the session." },
+        { "name": "realtime_active", "terminal": false, "description": "A linked AUC session is authoritative for the live working state. No Offline write to this asset is accepted while it lasts." }
+      ],
+      "events": ["attach", "detach", "forced_detach", "acquire_lease", "heartbeat", "save", "release_lease", "lease_expire", "accept_escalation", "session_created", "session_failed", "session_ended"],
+      "transitions": [
+        {
+          "from": "unattached", "event": "attach", "to": "workspace_idle",
+          "guards": ["caller holds asset.upload or asset.import", "asset is attached to no other workspace", "asset visibility is compatible with workspace visibility", "asset owner's account can accept any copy the attach requires"],
+          "refusals": ["insufficient_workspace_role", "asset_already_in_another_workspace", "private_asset_in_public_workspace", "asset_owner_storage_unavailable", "asset_owner_quota_exceeded"],
+          "sets": ["attached_at", "attached_by_user_id"],
+          "identity": ["workspace_id", "asset_id"],
+          "on_replay": "return_current"
+        },
+        {
+          "from": "workspace_idle", "event": "detach", "to": "unattached",
+          "guards": ["cause is overlord_detach, member_removed, member_left or workspace_deleted", "for overlord_detach the caller holds asset.detach", "the asset is not a pinned dependency of any active edit or session"],
+          "refusals": ["insufficient_workspace_role", "asset_detach_blocked_by_active_work", "asset_dependency_pinned"],
+          "sets": ["detached_at"],
+          "identity": ["workspace_id", "asset_id"],
+          "on_replay": "return_current",
+          "notes": "Detaching never deletes the asset, never transfers ownership and never moves the storage charge. Dependent maps in the workspace become explicitly missing-dependency; nothing is cloned or rewritten to hide it."
+        },
+        {
+          "from": "workspace_idle", "event": "forced_detach", "to": "unattached",
+          "guards": ["cause is a lawful forced lifecycle event: account erasure or legally required removal"],
+          "refusals": [],
+          "sets": ["detached_at"],
+          "identity": ["workspace_id", "asset_id"],
+          "on_replay": "return_current"
+        },
+        {
+          "from": "offline_editing", "event": "forced_detach", "to": "unattached",
+          "guards": ["cause is a lawful forced lifecycle event"],
+          "refusals": [],
+          "sets": ["detached_at"],
+          "identity": ["workspace_id", "asset_id"],
+          "on_replay": "return_current",
+          "notes": "The only event that leaves an active state without the work finishing. Account erasure cannot be held hostage by a collaboration lock; the affected editor is told the data was removed rather than left to discover it at the next save."
+        },
+        {
+          "from": "realtime_starting", "event": "forced_detach", "to": "unattached",
+          "guards": ["cause is a lawful forced lifecycle event"], "refusals": [], "sets": ["detached_at"],
+          "identity": ["workspace_id", "asset_id"], "on_replay": "return_current"
+        },
+        {
+          "from": "realtime_active", "event": "forced_detach", "to": "unattached",
+          "guards": ["cause is a lawful forced lifecycle event"], "refusals": [], "sets": ["detached_at"],
+          "identity": ["workspace_id", "asset_id"], "on_replay": "return_current"
+        },
+        {
+          "from": "workspace_idle", "event": "acquire_lease", "to": "offline_editing",
+          "guards": ["caller holds asset.edit", "asset is mutable", "no valid lease exists on the asset", "the same account holds no valid lease on this asset from another client instance"],
+          "refusals": ["edit_lease_not_available_for_role", "asset_not_mutable", "edit_lease_held_by_other_user", "edit_lease_held_by_other_client"],
+          "sets": ["acquired_at", "heartbeat_at", "expires_at"],
+          "identity": ["workspace_id", "asset_id", "user_id", "client_instance_id"],
+          "on_replay": "return_current",
+          "notes": "The same client instance re-acquiring its own valid lease is a replay and succeeds, which is what makes a reconnect safe. A different client instance of the same account is refused, not merged."
+        },
+        {
+          "from": "offline_editing", "event": "heartbeat", "to": "offline_editing",
+          "guards": ["caller holds the valid lease for this client instance"],
+          "refusals": ["edit_lease_not_held", "edit_lease_expired"],
+          "sets": ["heartbeat_at", "expires_at"],
+          "identity": ["workspace_id", "asset_id", "user_id", "client_instance_id"],
+          "on_replay": "return_current"
+        },
+        {
+          "from": "offline_editing", "event": "save", "to": "offline_editing",
+          "guards": ["caller holds asset.save", "caller holds the valid lease for this client instance", "expected_revision equals the asset's current revision", "the ASSET OWNER's account accepts the write"],
+          "refusals": ["insufficient_workspace_role", "edit_lease_not_held", "edit_lease_expired", "stale_asset_revision", "asset_owner_storage_unavailable", "asset_owner_quota_exceeded"],
+          "sets": ["revision", "last_modified_by_user_id", "size_bytes", "heartbeat_at", "expires_at"],
+          "identity": ["asset_id", "expected_revision", "idempotency_key"],
+          "on_replay": "return_current",
+          "notes": "A save does not release the lease and does not transfer ownership. The revision goes N -> N+1 and never anywhere else; there is no merge, no three-way reconciliation and no last-write-wins."
+        },
+        {
+          "from": "offline_editing", "event": "release_lease", "to": "workspace_idle",
+          "guards": ["caller holds the lease, or the caller holds member.remove and the holder is being removed under a lawful forced lifecycle event"],
+          "refusals": ["edit_lease_not_held"],
+          "sets": ["released_at"],
+          "identity": ["workspace_id", "asset_id", "user_id", "client_instance_id"],
+          "on_replay": "return_current"
+        },
+        {
+          "from": "offline_editing", "event": "lease_expire", "to": "workspace_idle",
+          "guards": ["now is at or past the lease's expires_at, by the SERVER's clock"],
+          "refusals": [],
+          "sets": ["expired_at"],
+          "identity": ["lease_id"],
+          "on_replay": "return_current",
+          "notes": "Evaluated when the asset is next asked about, not by a background sweep that declares work abandoned on its own initiative. A returning client must revalidate; it may never assume it still holds a lease."
+        },
+        {
+          "from": "offline_editing", "event": "accept_escalation", "to": "realtime_starting",
+          "guards": ["caller holds escalation.accept", "caller holds the valid lease for this asset", "the escalation request is still pending", "the asset is a map", "the asset is in no other linked session"],
+          "refusals": ["insufficient_workspace_role", "escalation_requires_incumbent_editor", "escalation_request_not_pending", "escalation_request_expired", "asset_not_realtime_eligible", "asset_already_in_realtime_session"],
+          "sets": ["realtime_started_at"],
+          "identity": ["escalation_request_id"],
+          "on_replay": "return_current"
+        },
+        {
+          "from": "realtime_starting", "event": "session_created", "to": "realtime_active",
+          "guards": ["the incumbent's state was flushed and saved under CAS", "the asset owner's quota accepted that save", "the dependency manifest resolved and every invited participant can read every non-platform dependency", "AUC created the session from that exact revision"],
+          "refusals": ["stale_asset_revision", "asset_owner_storage_unavailable", "asset_owner_quota_exceeded", "dependency_not_accessible", "dependency_missing", "linked_session_creation_failed"],
+          "sets": ["session_id", "base_revision", "dependency_manifest_hash", "session_overlord_user_id"],
+          "identity": ["escalation_request_id"],
+          "on_replay": "return_current"
+        },
+        {
+          "from": "realtime_starting", "event": "session_failed", "to": "offline_editing",
+          "guards": ["the incumbent's lease is still valid"],
+          "refusals": [],
+          "sets": ["realtime_failed_at"],
+          "identity": ["escalation_request_id"],
+          "on_replay": "return_current",
+          "notes": "Recovery to the truthful previous state, never to a phantom lock. The incumbent is shown the exact failing step; the session is not started from a browser snapshot to paper over it."
+        },
+        {
+          "from": "realtime_starting", "event": "session_failed", "to": "workspace_idle",
+          "guards": ["the incumbent's lease lapsed while the session was being created"],
+          "refusals": [],
+          "sets": ["realtime_failed_at"],
+          "identity": ["escalation_request_id"],
+          "on_replay": "return_current"
+        },
+        {
+          "from": "realtime_active", "event": "session_ended", "to": "workspace_idle",
+          "guards": ["the linked session reached `ended`, meaning its final persistence either succeeded or was explicitly recovered"],
+          "refusals": ["linked_session_creation_failed"],
+          "sets": ["realtime_ended_at"],
+          "identity": ["session_id"],
+          "on_replay": "return_current",
+          "notes": "Offline write access resumes only after the durable write is real. A failed final persistence keeps the link in `failed` and this asset in realtime_active, because the alternative is telling a user their map was saved when it was not."
+        }
+      ]
+    },
+    {
+      "id": "asset_edit_lease",
+      "subject": "asset_edit_lease",
+      "description": "One exclusive Offline writer for one mutable asset. The lease is concurrency policy and UX; the revision CAS is the correctness guarantee, and neither substitutes for the other.",
+      "initial": "active",
+      "states": [
+        { "name": "active", "terminal": false, "description": "Valid until expires_at unless released or revoked first." },
+        { "name": "released", "terminal": true, "description": "Given up deliberately — by the holder, or by handing the asset to a linked Real-time session." },
+        { "name": "expired", "terminal": true, "description": "Lapsed after the inactivity timeout." },
+        { "name": "revoked", "terminal": true, "description": "Ended by a lawful forced lifecycle event. Not an administrative convenience: V1 has no force-kick of an active editor." }
+      ],
+      "events": ["heartbeat", "release", "hand_over", "expire", "revoke"],
+      "transitions": [
+        { "from": "active", "event": "heartbeat", "to": "active", "guards": ["caller is the holding user AND client instance"], "refusals": ["edit_lease_not_held", "edit_lease_expired"], "sets": ["heartbeat_at", "expires_at"], "identity": ["lease_id", "client_instance_id"], "on_replay": "return_current" },
+        { "from": "active", "event": "release", "to": "released", "guards": ["caller is the holder"], "refusals": ["edit_lease_not_held"], "sets": ["released_at"], "identity": ["lease_id"], "on_replay": "return_current" },
+        { "from": "active", "event": "hand_over", "to": "released", "guards": ["a linked Real-time session for this asset reached `active`"], "refusals": [], "sets": ["released_at"], "identity": ["lease_id", "session_id"], "on_replay": "return_current" },
+        { "from": "active", "event": "expire", "to": "expired", "guards": ["server clock is at or past expires_at"], "refusals": [], "sets": ["expired_at"], "identity": ["lease_id"], "on_replay": "return_current" },
+        { "from": "active", "event": "revoke", "to": "revoked", "guards": ["lawful forced lifecycle event"], "refusals": [], "sets": ["revoked_at"], "identity": ["lease_id"], "on_replay": "return_current" }
+      ]
+    },
+    {
+      "id": "workspace",
+      "subject": "workspace",
+      "description": "The workspace object itself. Visibility is an attribute rather than a state, because a public and a private workspace differ in who may join and what may be attached, not in what operations exist.",
+      "initial": "active",
+      "states": [
+        { "name": "active", "terminal": false, "description": "Ordinary life." },
+        { "name": "deleted", "terminal": true, "description": "Memberships removed, invitations revoked, member-owned assets detached back to their owners, workspace-owned metadata gone. No other user's asset is deleted." }
+      ],
+      "events": ["update_metadata", "change_visibility", "delete"],
+      "transitions": [
+        { "from": "active", "event": "update_metadata", "to": "active", "guards": ["caller holds workspace.metadata.write", "expected metadata_revision matches", "any link in the description uses a scheme the product renders"], "refusals": ["insufficient_workspace_role", "workspace_metadata_stale_revision", "workspace_description_unsafe_link", "workspace_max_members_below_current", "workspace_max_members_above_platform_limit"], "sets": ["metadata_revision"], "identity": ["workspace_id", "expected_metadata_revision", "idempotency_key"], "on_replay": "return_current", "notes": "Renaming a workspace while a map inside it is being edited is allowed; names are display data and bind nothing." },
+        { "from": "active", "event": "change_visibility", "to": "active", "guards": ["caller holds workspace.visibility.change", "private -> public requires every attached asset to be public"], "refusals": ["insufficient_workspace_role", "workspace_visibility_blocked_by_private_assets"], "sets": ["visibility", "metadata_revision"], "identity": ["workspace_id", "visibility"], "on_replay": "return_current", "notes": "Neither direction changes membership or roles. public -> private stops new public joins and removes the public listing; existing members and their roles stay exactly as they were." },
+        { "from": "active", "event": "delete", "to": "deleted", "guards": ["caller holds workspace.delete", "no asset in the workspace is offline_editing, realtime_starting or realtime_active"], "refusals": ["insufficient_workspace_role", "workspace_delete_blocked_by_active_work"], "sets": ["deleted_at"], "identity": ["workspace_id"], "on_replay": "return_current" }
+      ]
+    },
+    {
+      "id": "workspace_membership",
+      "subject": "workspace_member",
+      "description": "One account's membership of one workspace. One account is one member however many browsers or devices it opens.",
+      "initial": "active",
+      "states": [
+        { "name": "active", "terminal": false, "description": "A member with a role." },
+        { "name": "removed", "terminal": true, "description": "Removed by the Overlord. Every asset this member owned is detached back to their account, and none of it is deleted." },
+        { "name": "left", "terminal": true, "description": "Left voluntarily, with the same asset consequences. A later rejoin is a NEW membership record, not a resurrection of this one." }
+      ],
+      "events": ["change_role", "remove", "leave"],
+      "transitions": [
+        { "from": "active", "event": "change_role", "to": "active", "guards": ["caller holds member.role.change", "the target is not the workspace owner", "if the change removes asset.edit, the target holds no active lease"], "refusals": ["insufficient_workspace_role", "workspace_owner_immutable", "role_change_blocked_by_active_lease"], "sets": ["role", "role_changed_at"], "identity": ["workspace_id", "user_id", "role"], "on_replay": "return_current" },
+        { "from": "active", "event": "remove", "to": "removed", "guards": ["caller holds member.remove", "the target is not the workspace owner", "the target holds no active lease", "no asset the target owns is a pinned dependency of active work"], "refusals": ["insufficient_workspace_role", "workspace_owner_immutable", "member_removal_blocked_by_active_work"], "sets": ["removed_at"], "identity": ["workspace_id", "user_id"], "on_replay": "return_current", "notes": "The confirmation the Overlord sees is generated from authoritative state at confirmation time — the assets that will leave, and the workspace maps that will be left with a missing dependency — never from a client-side inventory that may be minutes old." },
+        { "from": "active", "event": "leave", "to": "left", "guards": ["caller holds member.leave, which the owner does not", "the caller holds no active lease", "no asset the caller owns is a pinned dependency of active work"], "refusals": ["workspace_owner_cannot_leave", "member_removal_blocked_by_active_work"], "sets": ["left_at"], "identity": ["workspace_id", "user_id"], "on_replay": "return_current" }
+      ]
+    },
+    {
+      "id": "workspace_invitation",
+      "subject": "workspace_invitation",
+      "description": "A unique, single-use, revocable, expiring, role-bearing invitation bound to a known account. The assigned role lives on the server record; a role in a URL is never read.",
+      "initial": "pending",
+      "states": [
+        { "name": "pending", "terminal": false, "description": "Issued and not yet used." },
+        { "name": "accepted", "terminal": true, "description": "Consumed. Membership was created directly at the assigned role — a private invitation has no forced intermediate Pilgrim step." },
+        { "name": "declined", "terminal": true, "description": "The invited account said no." },
+        { "name": "revoked", "terminal": true, "description": "Withdrawn by the Overlord, or invalidated with the workspace." },
+        { "name": "expired", "terminal": true, "description": "Passed its expiry unused." }
+      ],
+      "events": ["accept", "decline", "revoke", "expire"],
+      "transitions": [
+        { "from": "pending", "event": "accept", "to": "accepted", "guards": ["the token hash matches", "the caller is the invited account", "now is before expires_at", "the workspace still exists"], "refusals": ["invitation_not_found", "invitation_wrong_account", "invitation_expired", "invitation_already_used", "invitation_revoked", "already_a_workspace_member", "workspace_not_found"], "sets": ["used_at"], "identity": ["invitation_id"], "on_replay": "conflict", "notes": "on_replay is conflict and not return_current: a second presentation of a single-use token is exactly the replay this record exists to refuse, and answering it with the created membership would make replay indistinguishable from success." },
+        { "from": "pending", "event": "decline", "to": "declined", "guards": ["the caller is the invited account"], "refusals": ["invitation_wrong_account"], "sets": ["declined_at"], "identity": ["invitation_id"], "on_replay": "return_current" },
+        { "from": "pending", "event": "revoke", "to": "revoked", "guards": ["caller holds member.invite"], "refusals": ["insufficient_workspace_role"], "sets": ["revoked_at"], "identity": ["invitation_id"], "on_replay": "return_current" },
+        { "from": "pending", "event": "expire", "to": "expired", "guards": ["server clock is at or past expires_at"], "refusals": [], "sets": ["expired_at"], "identity": ["invitation_id"], "on_replay": "return_current" }
+      ]
+    },
+    {
+      "id": "role_request",
+      "subject": "role_request",
+      "description": "A member asking for a higher role, in either collaboration scope, with an optional bounded plain-text message. Request metadata, not chat.",
+      "initial": "pending",
+      "states": [
+        { "name": "pending", "terminal": false, "description": "Awaiting the Overlord. At most one pending request per requester per scope." },
+        { "name": "approved", "terminal": true, "description": "Granted; the membership's role changed in the same transaction." },
+        { "name": "denied", "terminal": true, "description": "Refused. Auditable, like the approval." },
+        { "name": "withdrawn", "terminal": true, "description": "Taken back by the requester." },
+        { "name": "expired", "terminal": true, "description": "Unanswered past its expiry." }
+      ],
+      "events": ["approve", "deny", "withdraw", "expire"],
+      "transitions": [
+        { "from": "pending", "event": "approve", "to": "approved", "guards": ["caller holds role_request.resolve", "the requested role is not overlord", "the requester is still a member"], "refusals": ["insufficient_workspace_role", "role_request_cannot_target_overlord", "role_request_not_pending", "not_a_workspace_member"], "sets": ["resolved_by_user_id", "resolved_at"], "identity": ["role_request_id"], "on_replay": "return_current" },
+        { "from": "pending", "event": "deny", "to": "denied", "guards": ["caller holds role_request.resolve"], "refusals": ["insufficient_workspace_role", "role_request_not_pending"], "sets": ["resolved_by_user_id", "resolved_at"], "identity": ["role_request_id"], "on_replay": "return_current" },
+        { "from": "pending", "event": "withdraw", "to": "withdrawn", "guards": ["caller is the requester"], "refusals": ["role_request_not_pending"], "sets": ["resolved_at"], "identity": ["role_request_id"], "on_replay": "return_current" },
+        { "from": "pending", "event": "expire", "to": "expired", "guards": ["server clock is at or past expires_at"], "refusals": [], "sets": ["resolved_at"], "identity": ["role_request_id"], "on_replay": "return_current" }
+      ]
+    },
+    {
+      "id": "escalation_request",
+      "subject": "escalation_request",
+      "description": "A blocked eligible editor asking the incumbent Offline editor to turn a collision into a Real-time session. It is a request to the incumbent, never the requester starting a session: the person with the current work decides.",
+      "initial": "pending",
+      "states": [
+        { "name": "pending", "terminal": false, "description": "Delivered to the incumbent and not yet answered." },
+        { "name": "accepted", "terminal": true, "description": "The incumbent agreed; the asset moved to realtime_starting." },
+        { "name": "declined", "terminal": true, "description": "The incumbent said no. They keep the lease; the requester stays blocked and is told." },
+        { "name": "cancelled", "terminal": true, "description": "Withdrawn by the requester." },
+        { "name": "expired", "terminal": true, "description": "Unanswered past its expiry. The incumbent keeps the lease until the ordinary inactivity timeout." },
+        { "name": "superseded", "terminal": true, "description": "Overtaken: another request for the same asset was accepted, or the asset stopped being editable Offline. Two requesters never produce two sessions." }
+      ],
+      "events": ["accept", "decline", "cancel", "expire", "supersede"],
+      "transitions": [
+        { "from": "pending", "event": "accept", "to": "accepted", "guards": ["caller is the incumbent and holds escalation.accept", "the incumbent's lease is still valid", "the asset is a map and is in no other linked session"], "refusals": ["escalation_requires_incumbent_editor", "insufficient_workspace_role", "escalation_request_expired", "asset_not_realtime_eligible", "asset_already_in_realtime_session"], "sets": ["resolved_at", "linked_session_id"], "identity": ["escalation_request_id"], "on_replay": "return_current", "notes": "An acceptance that arrives after the lease has already lapsed is refused rather than honoured. A session started from expired authority would be a session created from a stale browser snapshot with extra steps." },
+        { "from": "pending", "event": "decline", "to": "declined", "guards": ["caller is the incumbent"], "refusals": ["escalation_requires_incumbent_editor"], "sets": ["resolved_at"], "identity": ["escalation_request_id"], "on_replay": "return_current" },
+        { "from": "pending", "event": "cancel", "to": "cancelled", "guards": ["caller is the requester"], "refusals": ["escalation_request_not_pending"], "sets": ["resolved_at"], "identity": ["escalation_request_id"], "on_replay": "return_current" },
+        { "from": "pending", "event": "expire", "to": "expired", "guards": ["server clock is at or past expires_at"], "refusals": [], "sets": ["resolved_at"], "identity": ["escalation_request_id"], "on_replay": "return_current" },
+        { "from": "pending", "event": "supersede", "to": "superseded", "guards": ["another request for this asset reached `accepted`, or the asset left offline_editing"], "refusals": [], "sets": ["resolved_at"], "identity": ["escalation_request_id"], "on_replay": "return_current" }
+      ]
+    },
+    {
+      "id": "linked_session",
+      "subject": "linked_session",
+      "description": "The link between one workspace map and one AUC session. AUC is authoritative for the live working state only while this link is active; AUB remains authoritative for identity, ownership, the base revision, the dependency manifest and the final persistence target throughout.",
+      "initial": "starting",
+      "states": [
+        { "name": "starting", "terminal": false, "description": "AUB has flushed and checked and is creating the session. Server-owned and short." },
+        { "name": "active", "terminal": false, "description": "The session is live. The incumbent Offline editor is its Overlord — not the workspace Overlord and not the map owner, unless they happen to be the same person." },
+        { "name": "finalizing", "terminal": false, "description": "The session ended and its state is being written back to AUB under the base-revision check." },
+        { "name": "ended", "terminal": true, "description": "Final persistence is durable. Only now does the asset return to workspace_idle." },
+        { "name": "failed", "terminal": false, "description": "Creation or final persistence failed. NOT terminal, and not silently unlocked: the failure is explicit and is recovered explicitly, because the alternative is a user believing a map was saved when it was not." }
+      ],
+      "events": ["session_created", "session_failed", "end_requested", "persisted", "persist_failed", "recovered"],
+      "transitions": [
+        { "from": "starting", "event": "session_created", "to": "active", "guards": ["AUC accepted the session at the exact base revision", "every participant can read every non-platform dependency in the manifest"], "refusals": ["linked_session_creation_failed", "dependency_not_accessible"], "sets": ["session_id", "started_at"], "identity": ["escalation_request_id"], "on_replay": "return_current" },
+        { "from": "starting", "event": "session_failed", "to": "failed", "guards": [], "refusals": [], "sets": ["failed_at", "failure_step"], "identity": ["escalation_request_id"], "on_replay": "return_current" },
+        { "from": "active", "event": "end_requested", "to": "finalizing", "guards": ["caller holds the session's own end authority under the Real-time rules"], "refusals": [], "sets": ["ending_at"], "identity": ["session_id"], "on_replay": "return_current" },
+        { "from": "finalizing", "event": "persisted", "to": "ended", "guards": ["the final write passed the base-revision check", "the MAP OWNER's account accepted it"], "refusals": ["stale_asset_revision", "asset_owner_storage_unavailable", "asset_owner_quota_exceeded"], "sets": ["ended_at", "final_revision"], "identity": ["session_id"], "on_replay": "return_current", "notes": "The session Overlord's final save may overwrite a map they do not own. Ownership does not change, storage is still charged to the owner, and the ordinary cross-owner warning applies." },
+        { "from": "finalizing", "event": "persist_failed", "to": "failed", "guards": [], "refusals": [], "sets": ["failed_at", "failure_step"], "identity": ["session_id"], "on_replay": "return_current", "notes": "The usual cause is the map owner no longer having writable storage. The recovery offered is an explicit copy to the saver's own account, after which the Overlord may replace the contribution through the ordinary workspace rules." },
+        { "from": "failed", "event": "recovered", "to": "ended", "guards": ["a person chose what happens to the session state: it was persisted elsewhere, or it was deliberately abandoned"], "refusals": [], "sets": ["ended_at", "recovery_choice"], "identity": ["session_id"], "on_replay": "return_current" }
+      ]
+    },
+    {
+      "id": "annotation_thread",
+      "subject": "annotation_thread",
+      "description": "A durable discussion anchored in a workspace asset. Annotation writes are not geometry writes and never travel on the map save path; the anchor's fate as geometry changes is an attribute of the thread, not a state of it.",
+      "initial": "open",
+      "states": [
+        { "name": "open", "terminal": false, "description": "Live discussion." },
+        { "name": "resolved", "terminal": false, "description": "Settled. Reopenable — discussion is never deleted automatically." }
+      ],
+      "events": ["resolve", "reopen"],
+      "transitions": [
+        { "from": "open", "event": "resolve", "to": "resolved", "guards": ["caller holds annotation.resolve"], "refusals": ["insufficient_workspace_role", "annotation_not_editable_by_caller"], "sets": ["resolved_at", "resolved_by_user_id"], "identity": ["thread_id"], "on_replay": "return_current", "notes": "Knight deliberately does not hold annotation.resolve. The older backlog left it open; V1 decides it, so that a contributor may raise a point and may not declare it settled." },
+        { "from": "resolved", "event": "reopen", "to": "open", "guards": ["caller holds annotation.resolve"], "refusals": ["insufficient_workspace_role", "annotation_not_editable_by_caller"], "sets": ["reopened_at"], "identity": ["thread_id"], "on_replay": "return_current" }
+      ]
+    }
+  ]
+}

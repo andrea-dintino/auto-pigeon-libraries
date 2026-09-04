@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "description": "The numbers. Every duration and bound the Offline contract depends on, in one place, each labelled with where it came from. `product` means the product specification fixed it and code may not choose otherwise; `contract_default` means this contract had to pick one so that four repositories would agree, and the number is revisable by the product without breaking the wire shape. The distinction is the point: an agent reading a 30-minute constant should be able to tell whether it is a decision or a convenience.",
+  "durations_ms": [
+    {
+      "name": "lease_inactivity_timeout_ms",
+      "value": 1800000,
+      "source": "product",
+      "summary": "Thirty minutes. An Offline edit lease lapses this long after its last heartbeat. Authoritative: the cadence of the heartbeats is implementation-owned, this number is not."
+    },
+    {
+      "name": "lease_heartbeat_max_interval_ms",
+      "value": 300000,
+      "source": "contract_default",
+      "summary": "The longest gap a live client may leave between heartbeats. Five minutes, so a server can tell a departed client from a thinking one well inside the thirty, and so AUB and AUP mean the same thing by `inactive`. A client that beats faster is fine; one that beats slower is indistinguishable from gone."
+    },
+    {
+      "name": "escalation_request_ttl_ms",
+      "value": 600000,
+      "source": "contract_default",
+      "summary": "Ten minutes for the incumbent to answer. Deliberately shorter than the lease timeout: a request must not outlive the lease it is addressed to, or an acceptance could arrive against authority that no longer exists."
+    },
+    {
+      "name": "escalation_request_min_interval_ms",
+      "value": 60000,
+      "source": "contract_default",
+      "summary": "One minute between requests from the same requester about the same asset. The rate limit exists so a blocked user cannot turn one incumbent's afternoon into a notification stream."
+    },
+    {
+      "name": "invitation_ttl_ms",
+      "value": 1209600000,
+      "source": "contract_default",
+      "summary": "Fourteen days. Long enough to survive a holiday, short enough that a leaked link is not a permanent key."
+    },
+    {
+      "name": "role_request_ttl_ms",
+      "value": 2592000000,
+      "source": "contract_default",
+      "summary": "Thirty days, after which an unanswered role request expires rather than sitting in an Overlord's list forever."
+    },
+    {
+      "name": "realtime_starting_timeout_ms",
+      "value": 30000,
+      "source": "contract_default",
+      "summary": "The longest an asset may sit in the server-owned realtime_starting state before AUB declares the escalation failed and recovers the asset to a truthful state. A transition state with no timeout is how a phantom lock is born."
+    }
+  ],
+  "limits": [
+    { "name": "role_request_message_max_chars", "value": 500, "source": "contract_default", "summary": "The optional message on a role request. Plain text; no HTML." },
+    { "name": "annotation_message_max_chars", "value": 4000, "source": "contract_default", "summary": "One annotation message or reply." },
+    { "name": "workspace_name_max_chars", "value": 120, "source": "contract_default", "summary": "Display only. Names bind nothing." },
+    { "name": "workspace_description_max_chars", "value": 4000, "source": "contract_default", "summary": "Safe Markdown links permitted; arbitrary HTML is not." },
+    { "name": "workspace_max_members_platform_ceiling", "value": 500, "source": "contract_default", "summary": "The hard bound an Overlord's max_members may not exceed, independent of what they choose. A platform limit, not a product promise." },
+    { "name": "workspace_assets_max", "value": 2000, "source": "contract_default", "summary": "Assets attachable to one workspace. Present so that `unbounded` is not the answer by default." },
+    { "name": "dependency_manifest_max_entries", "value": 512, "source": "contract_default", "summary": "Entries in one map's resolved dependency manifest." }
+  ],
+  "url_schemes": {
+    "permitted": ["http", "https"],
+    "refused": ["javascript", "data", "vbscript", "file"],
+    "summary": "Applies to links in a workspace description. Anything not in `permitted` is refused with workspace_description_unsafe_link; the refused list is named explicitly because those four are the ones a reviewer will look for."
+  }
+}

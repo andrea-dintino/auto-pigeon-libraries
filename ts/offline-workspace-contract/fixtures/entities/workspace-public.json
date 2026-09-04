@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "id": "wspublic0000001",
+  "name": "Open Quake 1 Jam",
+  "description": "Anyone may join and look around.",
+  "visibility": "public",
+  "owner_user_id": "user000000000a1",
+  "max_members": 40,
+  "join_policy": "open",
+  "metadata_revision": 3,
+  "state": "active",
+  "created_at": "2026-08-31T09:15:00.000Z",
+  "updated_at": "2026-08-31T09:15:00.000Z"
+}

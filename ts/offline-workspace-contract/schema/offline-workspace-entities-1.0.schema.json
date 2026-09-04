@@ -1,0 +1,473 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://auto-pigeon.dev/schema/offline-workspace-entities-1.0.schema.json",
+  "title": "Auto-Pigeon Offline Shared Workspace entities 1.0",
+  "description": "Every durable Offline Shared Workspace object, and the refusal envelope a rule returns, as one closed contract. additionalProperties is false everywhere on purpose: a field a component invents locally is a field the other three cannot read, and the whole reason this file exists is that four repositories were about to write down the same eleven objects four times. Deliberately built from a small keyword subset — $ref, const, enum, type, pattern, lengths, bounds, required, properties, items — so that the reference validator in this package and a full JSON Schema engine can be proved to agree on it.",
+  "$defs": {
+    "schema_version": {
+      "description": "The version of THIS contract, carried on every entity so a mixed store is readable. A record whose version this build does not implement is refused with unsupported_contract_version, never reinterpreted.",
+      "const": "1.0"
+    },
+    "id": {
+      "description": "A stable opaque identifier. Bounded and character-restricted, and deliberately NOT pinned to AUB's current 15-character PocketBase form: an id shape is a persistence detail, and pinning one into a cross-repository contract turns a future storage migration into a wire break. What the contract does insist on is that every reference in it is an id — never a name, a nickname or a filename.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{2,63}$"
+    },
+    "id_or_null": {
+      "description": "An id, or null where the contract has a meaning for absence — an unattached asset's workspace_id, an unresolved session link.",
+      "type": ["string", "null"],
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{2,63}$"
+    },
+    "timestamp": {
+      "description": "RFC 3339 UTC with milliseconds and a literal Z. Server clock: no client-supplied time is authoritative for an expiry, a lease or an ordering.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "timestamp_or_null": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "revision": {
+      "description": "A monotonic counter, the write precondition for its own object and nothing else. A workspace's metadata revision is not a precondition for saving a map inside it.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "role": {
+      "description": "The four frozen role names. The same four names the Real-time model uses, in a different scope; the containing object says which.",
+      "enum": ["overlord", "lord", "knight", "pilgrim"]
+    },
+    "assignable_role": {
+      "description": "The roles an invitation or a role request may name. Overlord is absent: workspace ownership is not a role grant and cannot be reached by asking for it.",
+      "enum": ["lord", "knight", "pilgrim"]
+    },
+    "visibility": {
+      "enum": ["public", "private"]
+    },
+    "asset_type": {
+      "description": "From offline-workspace-asset-types.json, which also carries the mutable and realtime_eligible flags.",
+      "enum": ["map", "texture_source", "entity_catalogue", "game_profile", "prefab_package"]
+    },
+    "client_instance_id": {
+      "description": "One editor instance — one browser profile, one device, one app window — minted by the client and stable for that instance's lifetime. It is what makes `the same account cannot edit the same map from two browsers` enforceable, and what keeps a reconnect from being read as a second editor. 32 lowercase hex, the same shape as a correlation id and for the same reason: no structure to misparse.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "idempotency_key": {
+      "description": "Minted per logical mutating request, replayed unchanged by a retry. 32 lowercase hex.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "correlation_id": {
+      "description": "The workspace-wide correlation convention, unchanged: X-Auto-Pigeon-Correlation-Id, 32 lowercase hex, malformed treated as absent and never forwarded.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "capability": {
+      "description": "A capability name from offline-workspace-roles.json.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+    },
+    "reason_code": {
+      "description": "A code from offline-workspace-reason-codes.json.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{2,63}$"
+    },
+    "detach_cause": {
+      "description": "Why an asset left a workspace. Every one of these leaves the asset in its owner's account, unaltered and undeleted; they differ only in who decided.",
+      "enum": ["overlord_detach", "member_removed", "member_left", "workspace_deleted", "account_erasure"]
+    },
+
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "name", "visibility", "owner_user_id", "metadata_revision", "state", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "description": { "description": "Safe Markdown. Links are permitted; arbitrary HTML and non-http(s) schemes are not.", "type": "string", "maxLength": 4000 },
+        "visibility": { "$ref": "#/$defs/visibility" },
+        "owner_user_id": { "description": "Exactly one owner, who always holds Overlord capability and can be neither demoted nor removed by an ordinary membership operation.", "$ref": "#/$defs/id" },
+        "max_members": { "description": "PUBLIC WORKSPACE EXTENSION. Configurable by the Overlord for a public workspace only, counted over unique account memberships including the owner, and bounded above by the platform ceiling. Present in the contract so that discovery can be built against it later; nothing in this task implements discovery.", "type": ["integer", "null"], "minimum": 1, "maximum": 500 },
+        "join_policy": { "description": "PUBLIC WORKSPACE EXTENSION. `invite_only` is the only policy a private workspace has; `open` admits any authenticated user as a Pilgrim up to max_members.", "enum": ["invite_only", "open"] },
+        "metadata_revision": { "$ref": "#/$defs/revision" },
+        "state": { "enum": ["active", "deleted"] },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "deleted_at": { "$ref": "#/$defs/timestamp_or_null" }
+      }
+    },
+
+    "workspace_public_card": {
+      "description": "PUBLIC WORKSPACE EXTENSION — the projection a discovery surface would render. It is a read model derived from the entities above, it holds no authority, and it is in this file so that the shape is agreed before anything renders it. Nothing in this task discovers, lists or joins anything.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "workspace_id", "name", "owner_display_name", "member_count", "asset_count", "join_available"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "workspace_id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "description_excerpt": { "type": "string", "maxLength": 400 },
+        "owner_display_name": { "description": "Display identity, never an e-mail address and never an account identifier a viewer could use to address the owner.", "type": "string", "minLength": 1, "maxLength": 120 },
+        "member_count": { "type": "integer", "minimum": 0 },
+        "max_members": { "type": ["integer", "null"], "minimum": 1 },
+        "asset_count": { "type": "integer", "minimum": 0 },
+        "map_count": { "type": "integer", "minimum": 0 },
+        "join_available": { "type": "boolean" }
+      }
+    },
+
+    "workspace_member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "workspace_id", "user_id", "role", "state", "joined_at", "updated_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "workspace_id": { "$ref": "#/$defs/id" },
+        "user_id": { "description": "One account is one member, however many tabs or devices it opens.", "$ref": "#/$defs/id" },
+        "role": { "$ref": "#/$defs/role" },
+        "state": { "enum": ["active", "removed", "left"] },
+        "joined_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "role_changed_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "removed_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "left_at": { "$ref": "#/$defs/timestamp_or_null" }
+      }
+    },
+
+    "workspace_asset": {
+      "description": "The attachment record: which asset is in which workspace, who put it there, and what its collaboration state is. Ownership is NOT duplicated here — the asset record is the canonical owner, and a denormalised second copy of an owner is a second answer waiting to disagree.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "workspace_id", "asset_id", "asset_type", "collaboration_state", "attached_at", "attached_by_user_id"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "workspace_id": { "$ref": "#/$defs/id" },
+        "asset_id": { "$ref": "#/$defs/id" },
+        "asset_type": { "$ref": "#/$defs/asset_type" },
+        "collaboration_state": { "enum": ["unattached", "workspace_idle", "offline_editing", "realtime_starting", "realtime_active"] },
+        "attached_at": { "$ref": "#/$defs/timestamp" },
+        "attached_by_user_id": { "$ref": "#/$defs/id" },
+        "detached_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "detach_cause": { "type": ["string", "null"], "enum": ["overlord_detach", "member_removed", "member_left", "workspace_deleted", "account_erasure", null] }
+      }
+    },
+
+    "asset_record": {
+      "description": "The canonical facts about one asset, owned by AUB and referenced by everything else. workspace_id is the one-workspace invariant made structural: it is a single nullable id, so an asset cannot be in two workspaces because there is nowhere to write the second one.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "asset_id", "asset_type", "owner_user_id", "visibility", "revision", "size_bytes", "workspace_id", "mutable", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "asset_id": { "$ref": "#/$defs/id" },
+        "asset_type": { "$ref": "#/$defs/asset_type" },
+        "owner_user_id": { "description": "Never changed by editing, by saving, by duplication of effort or by the workspace Overlord's ownership of the workspace. A copy is a new asset with a new owner; an edit is not.", "$ref": "#/$defs/id" },
+        "visibility": { "$ref": "#/$defs/visibility" },
+        "revision": { "$ref": "#/$defs/revision" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "last_modified_by_user_id": { "description": "Who wrote the current revision. Distinct from the owner, and distinct again from whoever holds the lease right now; a surface that conflates the three is lying about at least two of them.", "$ref": "#/$defs/id_or_null" },
+        "workspace_id": { "$ref": "#/$defs/id_or_null" },
+        "mutable": { "description": "Whether this asset has an in-place edit path and therefore an Offline lease. From offline-workspace-asset-types.json; carried on the record so a client need not join to find out.", "type": "boolean" },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+
+    "dependency_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["asset_id", "asset_type", "revision", "platform_owned"],
+      "properties": {
+        "asset_id": { "$ref": "#/$defs/id" },
+        "asset_type": { "$ref": "#/$defs/asset_type" },
+        "revision": { "$ref": "#/$defs/revision" },
+        "content_hash": { "$ref": "#/$defs/content_hash" },
+        "owner_user_id": { "$ref": "#/$defs/id_or_null" },
+        "visibility": { "$ref": "#/$defs/visibility" },
+        "platform_owned": { "description": "A platform-owned immutable default is referenced without becoming a workspace asset, is not access-checked per participant, and cannot be detached by anybody.", "type": "boolean" },
+        "resolved": { "description": "False for a dependency the manifest names and the store cannot produce. The map still loads where the dependency is only a rendering concern, and fails clearly where it is needed to parse.", "type": "boolean" }
+      }
+    },
+
+    "dependency_manifest": {
+      "description": "What a map actually needs, resolved from authoritative metadata and never guessed from filenames. It is what makes it provable that two participants are rendering the same thing, which is why it is pinned for the life of an edit lease or a session rather than re-resolved underneath one.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "asset_id", "asset_revision", "resolved_at", "manifest_hash", "dependencies"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "asset_id": { "$ref": "#/$defs/id" },
+        "asset_revision": { "$ref": "#/$defs/revision" },
+        "resolved_at": { "$ref": "#/$defs/timestamp" },
+        "manifest_hash": { "description": "Over the sorted (asset_id, revision) pairs. Two participants comparing this one string is the cheap version of comparing the whole closure.", "$ref": "#/$defs/content_hash" },
+        "pinned": { "description": "True while an edit lease or a linked session holds this manifest. A pinned dependency cannot be detached, deleted, made private, or destructively replaced.", "type": "boolean" },
+        "dependencies": { "type": "array", "maxItems": 512, "items": { "$ref": "#/$defs/dependency_entry" } }
+      }
+    },
+
+    "workspace_invitation": {
+      "description": "Unique, single-use, revocable, expiring, role-bearing, and bound to a known account. The token itself is never stored — only its hash — and the assigned role is read from this record and never from a URL.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "workspace_id", "invited_user_id", "assigned_role", "token_hash", "created_by_user_id", "state", "created_at", "expires_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "workspace_id": { "$ref": "#/$defs/id" },
+        "invited_user_id": { "description": "An account id. NOT an e-mail address: the contract's redaction rules forbid one in any record that can reach telemetry, and V1 invites a known AUP account rather than an address.", "$ref": "#/$defs/id" },
+        "assigned_role": { "$ref": "#/$defs/assignable_role" },
+        "token_hash": { "$ref": "#/$defs/content_hash" },
+        "created_by_user_id": { "$ref": "#/$defs/id" },
+        "state": { "enum": ["pending", "accepted", "declined", "revoked", "expired"] },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "expires_at": { "$ref": "#/$defs/timestamp" },
+        "used_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "declined_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "revoked_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "expired_at": { "$ref": "#/$defs/timestamp_or_null" }
+      }
+    },
+
+    "role_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "scope_type", "scope_id", "requester_user_id", "current_role", "requested_role", "state", "created_at", "updated_at", "expires_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "scope_type": { "description": "The same request object serves both collaboration scopes, which is why the scope is a field rather than two near-identical records.", "enum": ["workspace", "session"] },
+        "scope_id": { "$ref": "#/$defs/id" },
+        "requester_user_id": { "$ref": "#/$defs/id" },
+        "current_role": { "$ref": "#/$defs/role" },
+        "requested_role": { "$ref": "#/$defs/assignable_role" },
+        "message": { "description": "Optional, bounded, plain text. Request metadata, not chat: no HTML, no threading, no replies.", "type": "string", "maxLength": 500 },
+        "state": { "enum": ["pending", "approved", "denied", "withdrawn", "expired"] },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "expires_at": { "$ref": "#/$defs/timestamp" },
+        "resolved_by_user_id": { "$ref": "#/$defs/id_or_null" },
+        "resolved_at": { "$ref": "#/$defs/timestamp_or_null" }
+      }
+    },
+
+    "asset_edit_lease": {
+      "description": "The exclusive Offline writer. Concurrency policy, not the correctness guarantee: a save under a valid lease still passes revision CAS, because a lease that expired while a client was asleep is exactly the case where the two disagree.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "workspace_id", "asset_id", "user_id", "client_instance_id", "state", "acquired_at", "heartbeat_at", "expires_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "workspace_id": { "$ref": "#/$defs/id" },
+        "asset_id": { "$ref": "#/$defs/id" },
+        "user_id": { "$ref": "#/$defs/id" },
+        "client_instance_id": { "$ref": "#/$defs/client_instance_id" },
+        "state": { "enum": ["active", "released", "expired", "revoked"] },
+        "acquired_at": { "$ref": "#/$defs/timestamp" },
+        "heartbeat_at": { "$ref": "#/$defs/timestamp" },
+        "expires_at": { "description": "heartbeat_at + lease_inactivity_timeout_ms, by the server's clock. Thirty minutes is the product rule; the heartbeat cadence that keeps it moving is not.", "$ref": "#/$defs/timestamp" },
+        "released_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "expired_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "revoked_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "cross_owner_acknowledged": { "description": "The editor acknowledged, once for this lease, that the asset belongs to somebody else and that storage stays charged to the owner. Once per lease and not once per save: a warning shown on every Ctrl+S is a warning nobody reads.", "type": "boolean" }
+      }
+    },
+
+    "escalation_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "workspace_id", "asset_id", "requester_user_id", "incumbent_user_id", "state", "created_at", "updated_at", "expires_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "workspace_id": { "$ref": "#/$defs/id" },
+        "asset_id": { "$ref": "#/$defs/id" },
+        "requester_user_id": { "$ref": "#/$defs/id" },
+        "incumbent_user_id": { "description": "The lease holder at the time of the request. If it is the requester, the request is refused: a user's second browser does not invite the user to collaborate with themselves.", "$ref": "#/$defs/id" },
+        "state": { "enum": ["pending", "accepted", "declined", "cancelled", "expired", "superseded"] },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "expires_at": { "$ref": "#/$defs/timestamp" },
+        "resolved_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "linked_session_id": { "$ref": "#/$defs/id_or_null" }
+      }
+    },
+
+    "linked_session": {
+      "description": "One workspace map, one AUC session, one exact base revision. Three authorities can be three different people here and that is deliberate: the workspace Overlord administers, the map owner is charged, and the incumbent Offline editor who accepted the escalation runs the session.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "workspace_id", "asset_id", "base_revision", "session_overlord_user_id", "state", "created_at", "updated_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "workspace_id": { "$ref": "#/$defs/id" },
+        "asset_id": { "$ref": "#/$defs/id" },
+        "session_id": { "description": "AUC's session id. Null while the link is `starting` and after a creation failure, which is what makes the failure legible instead of a half-written record.", "$ref": "#/$defs/id_or_null" },
+        "base_revision": { "description": "The exact saved AUB revision the session starts from. Not a browser snapshot, and not `whatever was latest when AUC got round to it`.", "$ref": "#/$defs/revision" },
+        "dependency_manifest_hash": { "$ref": "#/$defs/content_hash" },
+        "session_overlord_user_id": { "description": "The incumbent Offline editor who accepted. Not derived from workspace ownership, not from map ownership, and never from how long somebody has been logged in.", "$ref": "#/$defs/id" },
+        "state": { "enum": ["starting", "active", "finalizing", "ended", "failed"] },
+        "failure_step": { "description": "Which step of the escalation failed, so the incumbent is told the truth rather than `could not start`.", "type": ["string", "null"], "enum": ["flush", "revision_cas", "owner_quota", "dependency_resolution", "dependency_access", "session_creation", "final_persistence", null] },
+        "final_revision": { "type": ["integer", "null"], "minimum": 0 },
+        "recovery_choice": { "type": ["string", "null"], "enum": ["persisted_elsewhere", "abandoned", null] },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "started_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "ending_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "ended_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "failed_at": { "$ref": "#/$defs/timestamp_or_null" }
+      }
+    },
+
+    "annotation_anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchor_state"],
+      "properties": {
+        "object_id": { "description": "Stable object identity inside the APMap document. The primary anchor; the world position is the visual fallback, never the identity.", "type": ["string", "null"], "maxLength": 128 },
+        "face_id": { "type": ["string", "null"], "maxLength": 128 },
+        "world_position": { "type": ["array", "null"], "maxItems": 3, "items": { "type": "number" } },
+        "anchor_state": { "description": "A thread whose target no longer exists becomes `orphaned` and stays readable. Discussion is never deleted because geometry moved.", "enum": ["anchored", "orphaned", "stale"] }
+      }
+    },
+
+    "annotation_thread": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "workspace_id", "asset_id", "anchor", "created_by_user_id", "state", "created_at", "updated_at", "asset_revision_at_creation"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "workspace_id": { "$ref": "#/$defs/id" },
+        "asset_id": { "$ref": "#/$defs/id" },
+        "anchor": { "$ref": "#/$defs/annotation_anchor" },
+        "created_by_user_id": { "$ref": "#/$defs/id" },
+        "state": { "enum": ["open", "resolved"] },
+        "asset_revision_at_creation": { "$ref": "#/$defs/revision" },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
+        "resolved_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "resolved_by_user_id": { "$ref": "#/$defs/id_or_null" },
+        "reopened_at": { "$ref": "#/$defs/timestamp_or_null" },
+        "message_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "annotation_message": {
+      "description": "One note or reply. The audience is the workspace membership; there is no per-message recipient list, because the membership IS the private circle.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "thread_id", "author_user_id", "body", "created_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "thread_id": { "$ref": "#/$defs/id" },
+        "author_user_id": { "$ref": "#/$defs/id" },
+        "body": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "edited_at": { "$ref": "#/$defs/timestamp_or_null" }
+      }
+    },
+
+    "annotation_read_state": {
+      "description": "Per member, per thread. What makes `3 unread` possible without a notification system.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "thread_id", "user_id", "last_read_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "thread_id": { "$ref": "#/$defs/id" },
+        "user_id": { "$ref": "#/$defs/id" },
+        "last_read_message_id": { "$ref": "#/$defs/id_or_null" },
+        "last_read_at": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+
+    "activity_event": {
+      "description": "The audit record: who did what, to which subject, when. Bounded and enumerated rather than free-form, so that `what happened in this workspace` is answerable and cannot become an unbounded event log.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "workspace_id", "actor_user_id", "action", "subject_type", "subject_id", "occurred_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "id": { "$ref": "#/$defs/id" },
+        "workspace_id": { "$ref": "#/$defs/id" },
+        "actor_user_id": { "description": "The account that acted. A system-initiated event — a lease expiring, a request expiring — names the subject and leaves the actor as the server's own identity rather than borrowing a user's.", "$ref": "#/$defs/id" },
+        "action": {
+          "enum": [
+            "workspace.created", "workspace.metadata_changed", "workspace.visibility_changed", "workspace.deleted",
+            "member.invited", "member.joined", "member.role_changed", "member.removed", "member.left",
+            "role_request.created", "role_request.approved", "role_request.denied",
+            "asset.attached", "asset.detached", "asset.saved",
+            "lease.acquired", "lease.released", "lease.expired",
+            "escalation.requested", "escalation.accepted", "escalation.declined", "escalation.expired",
+            "session.linked", "session.unlinked",
+            "annotation.thread_created", "annotation.resolved", "annotation.reopened"
+          ]
+        },
+        "subject_type": { "enum": ["workspace", "member", "asset", "lease", "invitation", "role_request", "escalation_request", "linked_session", "annotation_thread"] },
+        "subject_id": { "$ref": "#/$defs/id" },
+        "occurred_at": { "$ref": "#/$defs/timestamp" },
+        "detail": {
+          "description": "A bounded, typed set of extra facts. Deliberately not free-form: an audit record must never become a place where annotation text, geometry or an e-mail address ends up.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "role": { "$ref": "#/$defs/role" },
+            "previous_role": { "$ref": "#/$defs/role" },
+            "visibility": { "$ref": "#/$defs/visibility" },
+            "revision": { "$ref": "#/$defs/revision" },
+            "asset_type": { "$ref": "#/$defs/asset_type" },
+            "detach_cause": { "$ref": "#/$defs/detach_cause" },
+            "reason": { "$ref": "#/$defs/reason_code" },
+            "duration_ms": { "description": "Doctrine pillar 2: an expensive operation reports how long it took, and a message without a duration is an opinion.", "type": "integer", "minimum": 0 },
+            "correlation_id": { "$ref": "#/$defs/correlation_id" }
+          }
+        }
+      }
+    },
+
+    "blocking_reference": {
+      "description": "One concrete thing standing in the way, so a modal can list consequences instead of asserting them. `label` is present ONLY when the caller can already see that object: naming a private workspace to somebody who cannot see it would make a refusal into a disclosure.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "label_visible"],
+      "properties": {
+        "type": { "enum": ["workspace", "member", "asset", "lease", "linked_session", "annotation_thread", "dependency"] },
+        "id": { "$ref": "#/$defs/id" },
+        "label": { "type": "string", "maxLength": 200 },
+        "label_visible": { "type": "boolean" },
+        "asset_type": { "$ref": "#/$defs/asset_type" }
+      }
+    },
+
+    "refusal": {
+      "description": "What a rule returns when it says no. Clients choose their copy from `reason` and never by matching on `message`, which is diagnostic text for a log; that is the whole reason the code vocabulary is stable and this envelope is closed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "reason", "http_status"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schema_version" },
+        "reason": { "$ref": "#/$defs/reason_code" },
+        "http_status": { "type": "integer", "minimum": 400, "maximum": 599 },
+        "message": { "description": "Diagnostic only. Never parsed, never the source of user-facing copy.", "type": "string", "maxLength": 500 },
+        "subject_type": { "enum": ["workspace", "member", "asset", "lease", "invitation", "role_request", "escalation_request", "linked_session", "annotation_thread", "dependency"] },
+        "subject_id": { "$ref": "#/$defs/id" },
+        "required_capability": { "description": "Set on an authorization refusal, with the roles that hold it, so the sentence a user reads is derived from the one table rather than written beside it.", "$ref": "#/$defs/capability" },
+        "roles_with_capability": { "type": "array", "maxItems": 4, "items": { "$ref": "#/$defs/role" } },
+        "blocking": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/blocking_reference" } },
+        "current_revision": { "description": "Returned with stale_asset_revision so a client can say what it is behind by without a second round trip. Never accompanied by content: this is a conflict report, not a merge.", "$ref": "#/$defs/revision" },
+        "retry_after_ms": { "type": "integer", "minimum": 0 },
+        "correlation_id": { "$ref": "#/$defs/correlation_id" }
+      }
+    }
+  }
+}

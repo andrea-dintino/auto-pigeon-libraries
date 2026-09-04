@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "id": "lease0000000002",
+  "workspace_id": "wsprivate000001",
+  "asset_id": "map000000000001",
+  "user_id": "user000000000b2",
+  "client_instance_id": "fedcba9876543210fedcba9876543210",
+  "state": "expired",
+  "acquired_at": "2026-08-31T09:15:00.000Z",
+  "heartbeat_at": "2026-08-31T09:15:00.000Z",
+  "expires_at": "2026-08-31T09:45:00.000Z",
+  "expired_at": "2026-08-31T09:45:00.000Z",
+  "cross_owner_acknowledged": false
+}

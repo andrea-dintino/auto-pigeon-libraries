@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "id": "activity0000001",
+  "workspace_id": "wsprivate000001",
+  "actor_user_id": "user000000000a1",
+  "action": "asset.saved",
+  "subject_type": "asset",
+  "subject_id": "map000000000001",
+  "occurred_at": "2026-08-31T09:15:00.000Z",
+  "detail": {
+    "note": "User2 said the corridor is too narrow"
+  }
+}

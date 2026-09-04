@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "id": "member000000002",
+  "workspace_id": "wsprivate000001",
+  "user_id": "user000000000c3",
+  "role": "knight",
+  "state": "left",
+  "joined_at": "2026-08-31T09:15:00.000Z",
+  "updated_at": "2026-08-31T10:15:00.000Z",
+  "left_at": "2026-08-31T10:15:00.000Z"
+}

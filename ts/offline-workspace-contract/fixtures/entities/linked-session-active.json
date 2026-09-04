@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "id": "link00000000001",
+  "workspace_id": "wsprivate000001",
+  "asset_id": "map000000000001",
+  "session_id": "session00000001",
+  "base_revision": 18,
+  "dependency_manifest_hash": "sha256:abababababababababababababababababababababababababababababababab",
+  "session_overlord_user_id": "user000000000a1",
+  "state": "active",
+  "failure_step": null,
+  "final_revision": null,
+  "recovery_choice": null,
+  "created_at": "2026-08-31T10:15:00.000Z",
+  "updated_at": "2026-08-31T10:15:00.000Z",
+  "started_at": "2026-08-31T10:15:00.000Z",
+  "ending_at": null,
+  "ended_at": null,
+  "failed_at": null
+}

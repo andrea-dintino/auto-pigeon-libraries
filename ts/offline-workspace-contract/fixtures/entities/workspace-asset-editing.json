@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "id": "attach000000001",
+  "workspace_id": "wsprivate000001",
+  "asset_id": "map000000000001",
+  "asset_type": "map",
+  "collaboration_state": "offline_editing",
+  "attached_at": "2026-08-31T09:15:00.000Z",
+  "attached_by_user_id": "user000000000a1",
+  "detached_at": null,
+  "detach_cause": null
+}

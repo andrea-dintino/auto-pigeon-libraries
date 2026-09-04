@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "reason": "insufficient_workspace_role",
+  "http_status": 403,
+  "subject_type": "asset",
+  "subject_id": "map000000000001",
+  "required_capability": "asset.save",
+  "roles_with_capability": [
+    "overlord",
+    "lord"
+  ]
+}
