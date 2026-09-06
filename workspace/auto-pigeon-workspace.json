@@ -22,6 +22,12 @@
       "role": "Realtime collaboration: rooms, leases, journal."
     },
     {
+      "alias": "AUCOM",
+      "directory": "auto-pigeon-companion",
+      "clone_url": "https://github.com/andrea-dintino/auto-pigeon-companion.git",
+      "role": "Companion desktop application: local profiles, toolchains, builds and engine launches."
+    },
+    {
       "alias": "AUE",
       "directory": "auto-pigeon-extractor",
       "clone_url": "https://github.com/andrea-dintino/auto-pigeon-extractor.git",

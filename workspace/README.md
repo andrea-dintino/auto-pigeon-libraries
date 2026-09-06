@@ -18,6 +18,25 @@ rather than at the workspace root because a workspace root is a directory on som
 no git history, no review, and no test. **Do not reintroduce a loose root-level workspace metadata
 file.**
 
+## Membership is a product decision, not a directory listing
+
+This file answers **what this project is made of**, never **what happens to be checked out on this
+machine**. The two are different questions and the agent tooling asks both, so it keeps them apart:
+
+- `auto-pigeon-tools/scripts/repo_registry.py` discovers every local checkout carrying an
+  `.agent-repo.json`, and that is what an **explicitly named** queue resolves through — including a
+  repository this manifest has never named.
+- This manifest, in its order, is what an **unfiltered** report and a bare whole-workspace drain
+  mean. A repository is in the default set because it was added here on purpose.
+
+`AUCOM` (`auto-pigeon-companion`) joined at `20260906_120V`. `auto-pigeon-launcher` (AUL) is being
+merged into and superseded by it, and `ai-mapcopilot` (AIM) is legacy: both stay OUT of this list
+while remaining addressable by alias for as long as their checkouts exist. Adding a retiring
+repository here would put it into every clone, every pull and every drain.
+
+Order is presentational and the schema says so — but it is stable, and the tests assert it, because
+a generated alias table and a drain plan have to read the same on every machine.
+
 ## What it deliberately does not contain
 
 - **Machine paths.** No `/home/...`, no absolute anything. `directory` is a bare name.
