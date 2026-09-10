@@ -120,6 +120,15 @@ Note that a local-path dependency points outside a consuming repository's Docker
 build context, so a consumer that builds an image has to decide how `docker
 build` resolves it. See [`AGENTS.md`](AGENTS.md) §5.
 
+## What does not live here: the Auto-Pigeon artwork
+
+The Auto-Pigeon logo and its animations are not in this repository, and a
+package for them should not be added here. Everything committed here is
+published under Apache-2.0, and no licence has been chosen for the artwork. The
+editor repository owns it; the gallery holds one audited, checksum-pinned copy
+of the file it shows. Moving it here is a decision for the project owner, not a
+side effect of a build task.
+
 ## Contributing
 
 [`AGENTS.md`](AGENTS.md) is the authority on how work is done here: the two

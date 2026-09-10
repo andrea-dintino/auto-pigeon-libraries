@@ -99,6 +99,13 @@ and any added later).
 It ships libraries. It is not a service, it has no runtime of its own, and it
 owns no data.
 
+**It does not hold the Auto-Pigeon brand artwork**, and no task should add a
+package for it here on its own initiative. Everything committed here is
+Apache-2.0 and public, and no licence has been chosen for the artwork; the
+editor (`auto-pigeon`) owns it and the gallery holds one checksum-pinned copy.
+Decided in `AULIBS/AUP/AUG 236`; revisiting it is the owner's decision, tracked
+in the backlog.
+
 Because it is public: **no credentials, no internal hostnames, no references to
 private infrastructure in committed content.** The `$MAPPER_ROOT/LLM/` workflow
 paths referenced above are the workspace convention every sibling AGENTS.md
