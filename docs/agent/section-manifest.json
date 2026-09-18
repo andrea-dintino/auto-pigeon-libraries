@@ -1,0 +1,502 @@
+{
+ "schema": "aut-agent-section-manifest/1",
+ "established_by": "NEW_246G_AUT_AUG_AUCOM_AUTEL_AULIBS_Remaining-Repository-Documentation-Modularization",
+ "what_this_is": [
+  "The ACCOUNTING for the split of this repository's AGENTS.md: every heading the pre-split file",
+  "had, every LINE it had, and the ONE live file each now lives in. It exists so the claim `no",
+  "rule was lost` is checkable rather than asserted, and `agent_context_router.py gate` re-derives",
+  "it on every run rather than trusting it."
+ ],
+ "original_agents_sha256": "5431a0e7eea7acc09e592e2d126df2723b532ddc097c875fd9667f0688bff9c8",
+ "original_lines": 427,
+ "original_words": 3649,
+ "headings_total_including_title": 27,
+ "headings_accounted": 26,
+ "title_heading_note": "`# AGENTS.md — Auto-Pigeon Libraries (shared libraries)` (original line 1) is the document title rather than a rule, so it is not a section with a destination; it stayed the title of the compacted root file. Line 2 is the blank line under it. Both are in `title_lines`.",
+ "sections": [
+  {
+   "original_line": 3,
+   "level": 2,
+   "heading": "Do not read or run `run-sequence.sh`",
+   "destination": "AGENTS.md",
+   "destination_kind": "kept-in-root",
+   "note": "needed for nearly every task, or replaced by the routing table"
+  },
+  {
+   "original_line": 17,
+   "level": 2,
+   "heading": "0. Mapper workspace and task lifecycle",
+   "destination": "AGENTS.md",
+   "destination_kind": "kept-in-root",
+   "note": "needed for nearly every task, or replaced by the routing table"
+  },
+  {
+   "original_line": 58,
+   "level": 2,
+   "heading": "0a. The backlog — where deferred work lives",
+   "destination": "docs/agent/aulibs.backlog.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 91,
+   "level": 2,
+   "heading": "1. What this repository is",
+   "destination": "AGENTS.md",
+   "destination_kind": "kept-in-root",
+   "note": "needed for nearly every task, or replaced by the routing table"
+  },
+  {
+   "original_line": 114,
+   "level": 2,
+   "heading": "2. The two product rules",
+   "destination": "AGENTS.md",
+   "destination_kind": "kept-in-root",
+   "note": "needed for nearly every task, or replaced by the routing table"
+  },
+  {
+   "original_line": 119,
+   "level": 3,
+   "heading": "2.1 Validation is on-demand only",
+   "destination": "docs/agent/aulibs.on-demand-validation.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 136,
+   "level": 3,
+   "heading": "2.2 Every package declares its consumers",
+   "destination": "docs/agent/aulibs.used-by.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 141,
+   "level": 2,
+   "heading": "3. The `used-by.json` protocol",
+   "destination": "docs/agent/aulibs.used-by.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 146,
+   "level": 3,
+   "heading": "(a) Changing a package here",
+   "destination": "docs/agent/aulibs.used-by.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 164,
+   "level": 3,
+   "heading": "(b) Adopting a package from a consumer repo",
+   "destination": "docs/agent/aulibs.used-by.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 178,
+   "level": 2,
+   "heading": "4. Layout",
+   "destination": "docs/agent/aulibs.layout.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 205,
+   "level": 2,
+   "heading": "5. Consumption mechanism — partially open",
+   "destination": "docs/agent/aulibs.consumption.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 217,
+   "level": 3,
+   "heading": "Known unsolved issue: Docker build context",
+   "destination": "docs/agent/aulibs.consumption.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 232,
+   "level": 2,
+   "heading": "6. Testing",
+   "destination": "AGENTS.md",
+   "destination_kind": "kept-in-root",
+   "note": "needed for nearly every task, or replaced by the routing table"
+  },
+  {
+   "original_line": 244,
+   "level": 2,
+   "heading": "7. No Dockerfile",
+   "destination": "docs/agent/aulibs.consumption.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 253,
+   "level": 2,
+   "heading": "8. Commit policy",
+   "destination": "AGENTS.md",
+   "destination_kind": "kept-in-root",
+   "note": "needed for nearly every task, or replaced by the routing table"
+  },
+  {
+   "original_line": 265,
+   "level": 2,
+   "heading": "9. Component addresses live in `.env`, never in code",
+   "destination": "docs/agent/aulibs.component-addresses.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 271,
+   "level": 3,
+   "heading": "Why this is a rule and not a preference",
+   "destination": "docs/agent/aulibs.component-addresses.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 287,
+   "level": 3,
+   "heading": "What to do instead",
+   "destination": "docs/agent/aulibs.component-addresses.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 297,
+   "level": 3,
+   "heading": "The one permitted derivation",
+   "destination": "docs/agent/aulibs.component-addresses.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 304,
+   "level": 3,
+   "heading": "When the address is missing",
+   "destination": "docs/agent/aulibs.component-addresses.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 310,
+   "level": 2,
+   "heading": "10. The observability doctrine binds",
+   "destination": "docs/agent/aulibs.observability.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 331,
+   "level": 3,
+   "heading": "AULIBS clock table (doctrine pillar 2)",
+   "destination": "docs/agent/aulibs.clock-table.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 358,
+   "level": 2,
+   "heading": "Incident observability",
+   "destination": "docs/agent/aulibs.incidents.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 382,
+   "level": 3,
+   "heading": "What binds every change here",
+   "destination": "docs/agent/aulibs.incidents.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  },
+  {
+   "original_line": 413,
+   "level": 3,
+   "heading": "In this repository",
+   "destination": "docs/agent/aulibs.incidents.md",
+   "destination_kind": "moved-to-module",
+   "note": "routed, selectively read"
+  }
+ ],
+ "modules": [
+  {
+   "id": "aulibs.backlog",
+   "path": "docs/agent/aulibs.backlog.md",
+   "title": "The backlog — where deferred work lives",
+   "authority": [
+    "aulibs-backlog-duties"
+   ],
+   "topics": [
+    "backlog",
+    "deferred-work",
+    "deferral",
+    "follow-up",
+    "next-task"
+   ],
+   "original_ranges": [
+    "58-90"
+   ]
+  },
+  {
+   "id": "aulibs.on-demand-validation",
+   "path": "docs/agent/aulibs.on-demand-validation.md",
+   "title": "Validation is on-demand only — nothing here wakes up and declares a map broken",
+   "authority": [
+    "aulibs-on-demand-validation"
+   ],
+   "topics": [
+    "validation",
+    "on-demand",
+    "api-surface",
+    "errors",
+    "exceptions",
+    "product-rule"
+   ],
+   "original_ranges": [
+    "119-135"
+   ]
+  },
+  {
+   "id": "aulibs.used-by",
+   "path": "docs/agent/aulibs.used-by.md",
+   "title": "Every package declares its consumers, and the used-by.json protocol has two halves",
+   "authority": [
+    "aulibs-used-by-declaration",
+    "aulibs-used-by-protocol",
+    "aulibs-consumer-audit"
+   ],
+   "topics": [
+    "used-by",
+    "consumers",
+    "protocol",
+    "adoption",
+    "audit",
+    "cross-repository",
+    "manifest",
+    "breaking-change"
+   ],
+   "original_ranges": [
+    "136-140",
+    "141-177"
+   ]
+  },
+  {
+   "id": "aulibs.layout",
+   "path": "docs/agent/aulibs.layout.md",
+   "title": "Layout — one folder per package, and what each one must contain",
+   "authority": [
+    "aulibs-layout"
+   ],
+   "topics": [
+    "layout",
+    "packages",
+    "folders",
+    "fixtures",
+    "readme",
+    "schema",
+    "structure"
+   ],
+   "original_ranges": [
+    "178-204"
+   ]
+  },
+  {
+   "id": "aulibs.consumption",
+   "path": "docs/agent/aulibs.consumption.md",
+   "title": "How a consumer depends on a package — settled for development, open for deployment",
+   "authority": [
+    "aulibs-consumption-mechanism",
+    "aulibs-docker-build-context",
+    "aulibs-no-dockerfile"
+   ],
+   "topics": [
+    "consumption",
+    "dependency",
+    "file-path",
+    "npm",
+    "go-module",
+    "publication",
+    "docker",
+    "build-context",
+    "vendoring",
+    "dockerfile"
+   ],
+   "original_ranges": [
+    "205-231",
+    "244-252"
+   ]
+  },
+  {
+   "id": "aulibs.component-addresses",
+   "path": "docs/agent/aulibs.component-addresses.md",
+   "title": "Component addresses live in .env, never in code",
+   "authority": [
+    "aulibs.component-addresses"
+   ],
+   "topics": [
+    "addresses",
+    "env",
+    "configuration",
+    "ports",
+    "localhost",
+    "port-contract",
+    "public-repository"
+   ],
+   "original_ranges": [
+    "265-309"
+   ]
+  },
+  {
+   "id": "aulibs.observability",
+   "path": "docs/agent/aulibs.observability.md",
+   "title": "The observability doctrine binds, and a library does not log",
+   "authority": [
+    "aulibs-doctrine-application",
+    "aulibs-no-logging-transport"
+   ],
+   "topics": [
+    "doctrine",
+    "observability",
+    "logging",
+    "transport",
+    "determinism",
+    "diagnosability"
+   ],
+   "original_ranges": [
+    "310-330"
+   ]
+  },
+  {
+   "id": "aulibs.clock-table",
+   "path": "docs/agent/aulibs.clock-table.md",
+   "title": "The AULIBS clock table (doctrine pillar 2)",
+   "authority": [
+    "aulibs-clock-table"
+   ],
+   "topics": [
+    "timing",
+    "budget",
+    "clock",
+    "benchmark",
+    "measurement",
+    "performance",
+    "cache"
+   ],
+   "original_ranges": [
+    "331-357"
+   ]
+  },
+  {
+   "id": "aulibs.incidents",
+   "path": "docs/agent/aulibs.incidents.md",
+   "title": "Incident observability — AULIBS owns the contract and nothing else",
+   "authority": [
+    "aulibs-incident-contract-ownership",
+    "aulibs-incident-change-rules"
+   ],
+   "topics": [
+    "incidents",
+    "glitchtip",
+    "correlation",
+    "redaction",
+    "envelope",
+    "taxonomy",
+    "codes",
+    "schema",
+    "ajv"
+   ],
+   "original_ranges": [
+    "358-427"
+   ]
+  }
+ ],
+ "title_lines": [
+  1,
+  2
+ ],
+ "line_coverage": [
+  {
+   "from": 3,
+   "to": 57,
+   "destination": "AGENTS.md"
+  },
+  {
+   "from": 58,
+   "to": 90,
+   "destination": "docs/agent/aulibs.backlog.md"
+  },
+  {
+   "from": 91,
+   "to": 118,
+   "destination": "AGENTS.md"
+  },
+  {
+   "from": 119,
+   "to": 135,
+   "destination": "docs/agent/aulibs.on-demand-validation.md"
+  },
+  {
+   "from": 136,
+   "to": 177,
+   "destination": "docs/agent/aulibs.used-by.md"
+  },
+  {
+   "from": 178,
+   "to": 204,
+   "destination": "docs/agent/aulibs.layout.md"
+  },
+  {
+   "from": 205,
+   "to": 231,
+   "destination": "docs/agent/aulibs.consumption.md"
+  },
+  {
+   "from": 232,
+   "to": 243,
+   "destination": "AGENTS.md"
+  },
+  {
+   "from": 244,
+   "to": 252,
+   "destination": "docs/agent/aulibs.consumption.md"
+  },
+  {
+   "from": 253,
+   "to": 264,
+   "destination": "AGENTS.md"
+  },
+  {
+   "from": 265,
+   "to": 309,
+   "destination": "docs/agent/aulibs.component-addresses.md"
+  },
+  {
+   "from": 310,
+   "to": 330,
+   "destination": "docs/agent/aulibs.observability.md"
+  },
+  {
+   "from": 331,
+   "to": 357,
+   "destination": "docs/agent/aulibs.clock-table.md"
+  },
+  {
+   "from": 358,
+   "to": 427,
+   "destination": "docs/agent/aulibs.incidents.md"
+  }
+ ],
+ "line_coverage_note": "Every line of the pre-split AGENTS.md is claimed by exactly one live file. The gate re-derives this on every run: a gap, an overlap, or a destination no longer on disk is a failure, which is what stops the accounting rotting into a receipt. §2's heading and its two-sentence preamble stayed in the root, which keeps the statement that the two product rules govern everything here; §2.1 and §2.2 are modules, and §2.2's four lines travel with §3 because they are one rule stated twice over.",
+ "rules_without_headings": [
+  {
+   "original_line": 114,
+   "rule": "§2's preamble — the two product rules govern everything that will ever live here, and they are rules rather than preferences — stayed in the root; the rules themselves are `aulibs.on-demand-validation` and `aulibs.used-by`.",
+   "destination": "AGENTS.md"
+  }
+ ]
+}
