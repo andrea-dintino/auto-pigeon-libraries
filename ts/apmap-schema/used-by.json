@@ -18,7 +18,7 @@
     },
     {
       "repo": "auto-pigeon-extractor",
-      "usage": "Discovers the contract bundle at startup; it reads every readable version and its APMap producer declares the current one, derived from the layout.",
+      "usage": "Embeds this package's schema/ directory in its binary, fetched at every build by its scripts/sync-apmap-schemas.sh with a provenance manifest of the AULIBS commit and each schema sha256; APMAP_SCHEMA_DIR, when set, still wins. It reads every readable version and its APMap producer declares the current one, derived from the layout.",
       "added": "2026-08-20"
     },
     {
