@@ -3,7 +3,7 @@
   "consumers": [
     {
       "repo": "auto-pigeon-extractor",
-      "usage": "infer-lighting-rules resolves the effective Quake 1 lighting semantics from lighting.json whenever a request supplies no lighting-semantics document; the fixture table, the key names and the defaults decide which entities are lights and what each of their properties means.",
+      "usage": "infer-lighting-rules resolves the effective Quake 1 lighting semantics from lighting.json whenever a request supplies no lighting-semantics document; the fixture table, the key names and the defaults decide which entities are lights and what each of their properties means. AUE embeds this document in its binary, fetched at every build by scripts/sync-aulibs.sh with a provenance manifest of the AULIBS commit and sha256, and reads it when AUE_GAME_PARAMS_DIR, a packaged games/ directory and a workspace checkout are all absent.",
       "added": "2026-09-04"
     }
   ]
