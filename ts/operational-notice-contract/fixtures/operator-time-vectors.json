@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "description": "How an operator's local wall-clock time becomes a stored UTC instant. Consumed by the operator CLI in auto-pigeon-tools (Python zoneinfo). Hand-written, not generated: these are facts about the tz database, checked against it by that CLI's tests. 2026's EU transitions: summer time starts 2026-03-29 02:00 local (clocks jump to 03:00) and ends 2026-10-25 03:00 local (clocks fall back to 02:00).",
+  "cases": [
+    { "name": "Copenhagen winter (CET, UTC+1)", "zone": "Europe/Copenhagen", "local": "2026-01-15T22:00", "expected": { "utc": "2026-01-15T21:00:00.000Z" } },
+    { "name": "Copenhagen summer (CEST, UTC+2)", "zone": "Europe/Copenhagen", "local": "2026-07-15T22:00", "expected": { "utc": "2026-07-15T20:00:00.000Z" } },
+    { "name": "spring-forward gap does not exist", "zone": "Europe/Copenhagen", "local": "2026-03-29T02:30", "expected": { "refusal": "nonexistent_local_time" } },
+    { "name": "fall-back hour is ambiguous", "zone": "Europe/Copenhagen", "local": "2026-10-25T02:30", "expected": { "refusal": "ambiguous_local_time" } },
+    { "name": "ambiguous, first occurrence chosen (still summer time)", "zone": "Europe/Copenhagen", "local": "2026-10-25T02:30", "fold": 0, "expected": { "utc": "2026-10-25T00:30:00.000Z" } },
+    { "name": "ambiguous, second occurrence chosen (winter time)", "zone": "Europe/Copenhagen", "local": "2026-10-25T02:30", "fold": 1, "expected": { "utc": "2026-10-25T01:30:00.000Z" } },
+    { "name": "CET is refused, not treated as Copenhagen", "zone": "CET", "local": "2026-07-15T22:00", "expected": { "refusal": "zone_not_iana_region" } },
+    { "name": "CEST is refused", "zone": "CEST", "local": "2026-07-15T22:00", "expected": { "refusal": "zone_not_iana_region" } },
+    { "name": "a POSIX-style zone is refused", "zone": "EST5EDT", "local": "2026-07-15T22:00", "expected": { "refusal": "zone_not_iana_region" } },
+    { "name": "an unknown region is refused", "zone": "Europe/Atlantis", "local": "2026-07-15T22:00", "expected": { "refusal": "zone_unknown" } },
+    { "name": "UTC is accepted as itself", "zone": "UTC", "local": "2026-07-15T22:00", "expected": { "utc": "2026-07-15T22:00:00.000Z" } },
+    { "name": "a malformed local time is refused", "zone": "Europe/Copenhagen", "local": "2026-02-30T10:00", "expected": { "refusal": "local_time_invalid" } }
+  ]
+}

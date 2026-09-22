@@ -32,3 +32,24 @@ export {
   toSentryEvent,
   toDiagnosticText,
 } from "./envelope.mjs";
+
+export {
+  BUG_REPORT_SCHEMA,
+  BUG_REPORT_REPOSITORY,
+  BUG_REPORT_LIMITS,
+  bugReportRules,
+  bugReportSchema,
+  sanitizeReportText,
+  coarseBrowser,
+  coarseOs,
+  buildBugReport,
+  canonicalReportJson,
+  reportJsonDownload,
+  validateBugReport,
+  renderReportText,
+  renderIssue,
+  prefilledIssueUrl,
+  reportDownloadNames,
+} from "./bugReport.mjs";
+
+export { stackFrames, exceptionType } from "./frames.mjs";

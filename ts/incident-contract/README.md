@@ -193,3 +193,55 @@ ts/incident-contract/
 ```
 
 Run it with `./run.sh test` from the repository root, or `npm test` here.
+
+## The user bug report — `auto-pigeon-bug-report/1.0` (since 1.2.0)
+
+A bug report is **published publicly** on `https://github.com/auto-pigeon/bug-reports`, so it is
+ONE document with ONE set of renderings, and nothing is added after the user has seen it.
+
+| | |
+| --- | --- |
+| `schema/bug-report-1.0.schema.json` | the CLOSED document: user summary/steps/expected/actual, component, release, environment, an incident by **code** (never its message), coarse client facts, and at most 30 recent machine-named activities |
+| `schema/bug-report-rules.json` | bounds, the removed code points (C0/C1, bidi, zero-width), and the patterns — read by AUB's Go re-validation too |
+| `fixtures/bug-report-vectors.json` | generated cross-language vectors, including redaction canaries in every prohibited source (`npm run vectors`) |
+
+```js
+import { buildBugReport, renderReportText, reportJsonDownload, renderIssue, prefilledIssueUrl } from "@auto-pigeon/incident-contract";
+
+const built = buildBugReport({ component: "AUP", release, environment, user: { summary, steps, expected, actual }, incident, client, recent });
+if (built.ok) {
+  renderReportText(built.document);                     // the preview text and the .txt download
+  reportJsonDownload(built.document);                   // the .json download (canonical, key-sorted)
+  prefilledIssueUrl(built.document);                    // GitHub's prefilled form — opens, never submits
+  renderIssue(built.document, { route: "server" });     // exactly what AUB's POST /api/bug-reports files
+}
+```
+
+- **Structural exclusion first.** There is no field for a map, map name, annotation, chat, asset,
+  account, address or token. Redaction (now including full URLs, IPv4 addresses, known token
+  prefixes and `~/` paths) is the second line, for what the user typed.
+- **Nothing a user types can reshape the issue.** The whole report sits in one code fence longer
+  than any backtick run inside it, so Markdown, HTML, mentions and issue references are inert.
+- **A too-long report omits its OLDEST activity from the document itself** to fit GitHub's
+  prefilled URL, so the preview still equals what is sent; when even that is not enough,
+  `prefill.fits` is false and the client offers the download and the server route instead.
+- **`validateBugReport` refuses a non-canonical document** (`user.steps:not_canonical`), which is
+  how AUB declines to publish text the client did not already show the user.
+- `report_id` is minted once per report and is the server route's idempotency key.
+
+## Stack frames for source-map symbolication (since 1.2.0)
+
+`stackFrames(error.stack, { origin: location.origin })` keeps only frames from the application's
+OWN bundle and rewrites each to `app:///assets/<file>.js` with a plain function name, line and
+column — no host, IP, port, query, fragment, extension or foreign script. `toSentryEvent(incident,
+{ exception: { type: exceptionType(error), frames } })` attaches them AFTER redaction, with the
+incident CODE as the exception value (never the message). GlitchTip matches a frame to its privately
+uploaded map by the file's basename under the event's exact release, so the `app://` prefix costs
+nothing and publishes nothing.
+
+## 1.2.0 taxonomy additions
+
+`AUCOM` joins the envelope's `component` enum, with `aucom.job_failed` and
+`aucom.readiness_failed`; the launcher gains `aut.launch_failed` (`subsystem`: compose, readiness,
+child). AUB and AUE embed `incident-codes.json` and the envelope schema byte for byte and must
+re-embed them; AUG and AUC vendor the whole package and must re-vendor it.

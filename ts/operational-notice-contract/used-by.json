@@ -1,0 +1,30 @@
+{
+  "package": "ts/operational-notice-contract",
+  "consumers": [
+    {
+      "repo": "auto-pigeon-companion",
+      "usage": "241. AUCOM's local web UI renders operational notices with this package, VENDORED byte for byte: src/index.mjs, schema/notice-rules.json and schema/operational-notices-response-1.0.schema.json live under internal/web/assets/vendor/operational-notice-contract/{src,schema}/ so the module's `../schema/*.json` JSON-module imports resolve when served, and they are embedded in the binary with go:embed. internal/web/notices_vendor_test.go TestVendoredNoticeContractIsExactlyAULIBS compares all three against this package and fails on drift, skipping loudly with no sibling checkout. assets/notices.mjs uses parseNoticeResponse, selectVisibleNotices, clockOffsetMs, dismissalKey, cacheableResponse, restoreCachedResponse, nextPollDelayMs and NOTICE_TELEMETRY_EVENTS; it fetches the Companion's own guarded GET /api/v1/notices, which relays AUB's GET /api/operational-notices?surface=aucom (with the session only when signed in), passing ETag/If-None-Match and X-Auto-Pigeon-Server-Time through unchanged. Only cacheableResponse output is stored (localStorage); the Go server writes nothing about notices to disk. No package code was changed by AUCOM; this row is the only write.",
+      "added": "2026-09-22"
+    },
+    {
+      "repo": "auto-pigeon-gallery",
+      "usage": "241. AUG renders operational notices with this package, VENDORED byte for byte at vendor/operational-notice-contract/ (package.json, README.md, schema/, src/, fixtures/), wired as `file:vendor/operational-notice-contract` because `docker build .` cannot resolve a sibling path; vite/operationalNoticeContractDrift.test.ts compares all 8 files and the published file list against this package, skipping loudly with no sibling checkout. src/notices/api.ts fetches AUB's GET /api/operational-notices?surface=aug through the normal AUB client (If-None-Match, token only when signed in) and uses parseNoticeResponse and clockOffsetMs (X-Auto-Pigeon-Server-Time, else body server_time); src/notices/poller.ts uses nextPollDelayMs, cacheableResponse and NOTICE_TELEMETRY_EVENTS (the only telemetry, as breadcrumbs/counters); src/notices/storage.ts uses restoreCachedResponse (localStorage, try/catch, public notices only); src/notices/useOperationalNotices.ts uses selectVisibleNotices every second and dismissalKey for per-account, per-revision dismissal, re-evaluating immediately on sign-in/out. src/notices/NoticeBanner.tsx renders title/body as text only in a compact strip in SiteLayout, signed in and out; critical is never dismissible; the planned-downtime limit is stated. poller.test.ts runs the package's client, poll and wrong_clock vectors through the vendored module. No package code was changed by AUG; this row is the only write.",
+      "added": "2026-09-22"
+    },
+    {
+      "repo": "auto-pigeon-backend",
+      "usage": "241. internal/notice/contract/ holds BYTE-FOR-BYTE go:embed copies of schema/notice-rules.json, schema/operational-notices-response-1.0.schema.json and fixtures/notice-vectors.json; TestEmbeddedContractIsExactlyAULIBS fails on drift and skips loudly with no sibling checkout. internal/notice holds Go ports of checkNoticeText, checkNoticeSchedule (with Date.parse's edge semantics) and selectServerNotices that reproduce every server/text/schedule vector. internal/opnotice owns the superuser-only operational_notices collection (revision/stale check, audit, 500-row cap from limits.max_rows) and the public GET /api/operational-notices?surface= read answering the closed auto-pigeon-operational-notices/1.0 response with ETag/304/X-Auto-Pigeon-Server-Time. No package code changed by AUB.",
+      "added": "2026-09-22"
+    },
+    {
+      "repo": "auto-pigeon-tools",
+      "usage": "241. scripts/aup/notices.py (the operator CLI for AUB operational_notices) reads schema/notice-rules.json in place from the sibling checkout — limits, removed_ranges, refused_patterns, severities, surfaces, visibilities, patterns.instant and operator_time (zone_pattern, refusals) — and ports checkNoticeText/checkNoticeSchedule and the operator-time rules to Python; tests/test_operator_notices.py runs fixtures/notice-vectors.json (text, schedule) and fixtures/operator-time-vectors.json through it and skips loudly without the checkout. The 241 E2E harness (scripts/aup/telemetry_e2e/) drives AUB's read route and records API against the same contract. No copy is kept in AUT.",
+      "added": "2026-09-22"
+    },
+    {
+      "repo": "auto-pigeon",
+      "usage": "241. services/operationalNotices.ts is AUP's client of AUB's GET /api/operational-notices?surface=aup: parseNoticeResponse, clockOffsetMs (from X-Auto-Pigeon-Server-Time or server_time), selectVisibleNotices, dismissalKey, cacheableResponse/restoreCachedResponse (localStorage, try/catch), nextPollDelayMs (one request in flight, If-None-Match) and NOTICE_TELEMETRY_EVENTS as the only telemetry; components/OperationalNoticeBanner.tsx renders the result as text outside <main inert> (DESIGN.md §189). IMPORTANT: the whole package is VENDORED byte for byte at frontend/vendor/operational-notice-contract/ and wired as file:vendor/operational-notice-contract, because the AUP image receives only incident-contract as a named build context from auto-pigeon-tools; src/test/operationalNoticeContractDrift.test.ts compares all 8 published files against this package and fails on drift, skipping loudly with no sibling checkout. Tests drive fixtures/notice-vectors.json through the poller. No package code was changed by AUP.",
+      "added": "2026-09-22"
+    }
+  ]
+}

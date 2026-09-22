@@ -179,10 +179,35 @@ export function toSentryEvent(incident, options = {}) {
       },
     },
   };
+  // Frames for source-map symbolication, added AFTER redaction and only in the shape
+  // `stackFrames` produces (`app:///<path>.js`, a plain function name, line, column). The exception
+  // VALUE is the incident code, never the error message: the message is free text and already
+  // travels, redacted, as `message`.
+  const frames = Array.isArray(options.exception?.frames) ? options.exception.frames.filter(isSafeFrame).slice(-30) : [];
+  if (frames.length) {
+    event.exception = {
+      values: [{
+        type: /^[A-Z][A-Za-z0-9]{0,39}$/.test(options.exception.type ?? "") ? options.exception.type : "Error",
+        value: safe.code,
+        stacktrace: { frames },
+      }],
+    };
+  }
   for (const key of Object.keys(event)) {
     if (event[key] === undefined) delete event[key];
   }
   return event;
+}
+
+const SAFE_PATH = /^app:\/\/\/(?:[A-Za-z0-9._-]+\/){0,8}[A-Za-z0-9._-]+\.m?js$/;
+function isSafeFrame(frame) {
+  return frame !== null && typeof frame === "object"
+    && SAFE_PATH.test(frame.abs_path) && frame.filename === frame.abs_path
+    && /^[A-Za-z0-9_$.<>?]{1,80}$/.test(frame.function)
+    && Number.isInteger(frame.lineno) && frame.lineno > 0
+    && Number.isInteger(frame.colno) && frame.colno > 0
+    && frame.in_app === true
+    && Object.keys(frame).length === 6;
 }
 
 /**

@@ -66,10 +66,34 @@ test("free text loses absolute local paths, on both kinds of machine", () => {
   assert.match(windows, /\[redacted-path\]/);
 });
 
-test("free text loses credentials embedded in a URL", () => {
+test("free text loses credentials embedded in a URL — and, since 241, the whole URL", () => {
   const out = redactText(`configured DSN ${FAKE.dsnUserInfo}`);
   assert.ok(!out.includes("FAKEsecret"));
-  assert.ok(out.includes("://[redacted]@"));
+  assert.ok(!out.includes("glitchtip.example.invalid"));
+  assert.equal(out, "configured DSN [redacted-url]");
+});
+
+test("a full URL goes: host, path ids and query tokens alike (241)", () => {
+  const out = redactText("GET https://aub.example.invalid/api/maps/abc123?token=FAKEqueryTOKEN failed");
+  assert.equal(out, "GET [redacted-url] failed");
+  assert.equal(redactText("open file:///home/somebody/x.map"), "open [redacted-url]");
+  assert.equal(redactText("ws://10.0.0.5:2567/room"), "[redacted-url]");
+});
+
+test("an IPv4 address goes, a release number does not (241)", () => {
+  assert.equal(redactText("dial tcp 172.18.0.3:8666: refused"), "dial tcp [redacted-ip]:8666: refused");
+  assert.equal(redactText("release 1.842"), "release 1.842");
+  assert.equal(redactText("version 1.2.3"), "version 1.2.3");
+});
+
+test("well-known token prefixes go even without a scheme word in front (241)", () => {
+  for (const token of ["ghp_FAKEfakeFAKEfake0123456789", "github_pat_FAKE_fake_FAKE_fake_0123", "glpat-FAKEfakeFAKEfake01234", "xoxb-FAKE-fake-0123", "sk-FAKEfakeFAKEfake01234567", "AKIAFAKEFAKEFAKE0123"]) {
+    assert.equal(redactText(`key ${token} end`), "key [redacted-token] end", token);
+  }
+});
+
+test("a home-relative path goes (241)", () => {
+  assert.equal(redactText("saved to ~/private/maps/x.map"), "saved to [redacted-path]");
 });
 
 test("a key naming a secret loses its value however it is spelled", () => {

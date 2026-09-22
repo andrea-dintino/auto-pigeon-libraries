@@ -36,7 +36,7 @@
     },
     "component": {
       "description": "Which repository's code raised it. The acronyms are the workspace's own and are the same strings the version manifest and the health dashboard use.",
-      "enum": ["AUP", "AUB", "AUC", "AUE", "AUG", "AUT"]
+      "enum": ["AUP", "AUB", "AUC", "AUE", "AUG", "AUT", "AUCOM"]
     },
     "subsystem": {
       "description": "The part of that component, in its own vocabulary: `render.3d`, `scheduler`, `room`, `wad`, `journal`. Free text on purpose — a closed list here would need editing for every new subsystem — but it is an identifier, never a sentence, and it is length-bounded so it cannot become a dumping ground.",
