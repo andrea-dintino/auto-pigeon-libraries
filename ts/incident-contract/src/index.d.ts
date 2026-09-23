@@ -112,7 +112,7 @@ export function toDiagnosticText(incident: Incident): string;
 
 // ---- The user bug report (auto-pigeon-bug-report/1.0) -------------------------------------------
 
-export type BugReportComponent = "AUP" | "AUG";
+export type BugReportComponent = "AUP" | "AUG" | "AUCOM";
 export type BugReportRoute = "prefilled" | "server";
 
 export interface BugReportRecent {

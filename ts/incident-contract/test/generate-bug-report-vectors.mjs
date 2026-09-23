@@ -100,6 +100,10 @@ const reportCases = [
     input: { component: "AUG", release: "1.301", environment: "development", reportId: RID, now: NOW, user: { summary: "Gallery card shows the wrong author" }, client: { userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0", language: "da-DK" } },
   },
   {
+    name: "AUCOM cold report",
+    input: { component: "AUCOM", release: "1.214", environment: "development", reportId: RID, now: NOW, user: { summary: "Build & Run does not highlight the current step" }, client: { userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36", language: "it-IT" } },
+  },
+  {
     name: "canaries in every prohibited source",
     input: {
       component: "AUG",

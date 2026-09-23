@@ -360,6 +360,64 @@
       }
     },
     {
+      "name": "AUCOM cold report",
+      "input": {
+        "component": "AUCOM",
+        "release": "1.214",
+        "environment": "development",
+        "reportId": "0123456789abcdef0123456789abcdef",
+        "now": "2026-09-22T12:00:00.000Z",
+        "user": {
+          "summary": "Build & Run does not highlight the current step"
+        },
+        "client": {
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+          "language": "it-IT"
+        }
+      },
+      "expected": {
+        "ok": true,
+        "document": {
+          "schema": "auto-pigeon-bug-report/1.0",
+          "report_id": "0123456789abcdef0123456789abcdef",
+          "created_at": "2026-09-22T12:00:00.000Z",
+          "component": "AUCOM",
+          "release": "1.214",
+          "environment": "development",
+          "kind": "cold",
+          "user": {
+            "summary": "Build & Run does not highlight the current step",
+            "steps": "",
+            "expected": "",
+            "actual": ""
+          },
+          "client": {
+            "browser": "Chrome 140",
+            "os": "Linux",
+            "language": "it"
+          },
+          "recent": [],
+          "omitted_recent": 0
+        },
+        "canonical_json": "{\"client\":{\"browser\":\"Chrome 140\",\"language\":\"it\",\"os\":\"Linux\"},\"component\":\"AUCOM\",\"created_at\":\"2026-09-22T12:00:00.000Z\",\"environment\":\"development\",\"kind\":\"cold\",\"omitted_recent\":0,\"recent\":[],\"release\":\"1.214\",\"report_id\":\"0123456789abcdef0123456789abcdef\",\"schema\":\"auto-pigeon-bug-report/1.0\",\"user\":{\"actual\":\"\",\"expected\":\"\",\"steps\":\"\",\"summary\":\"Build & Run does not highlight the current step\"}}",
+        "text": "Auto-Pigeon bug report (auto-pigeon-bug-report/1.0)\nIf you submit it, this report is published PUBLICLY at https://github.com/auto-pigeon/bug-reports.\n\nreport        0123456789abcdef0123456789abcdef\ncreated       2026-09-22T12:00:00.000Z\ncomponent     AUCOM\nrelease       1.214\nenvironment   development\nkind          cold\n\nSummary\n-------\nBuild & Run does not highlight the current step\n\nSteps to reproduce\n------------------\n(not given)\n\nExpected result\n---------------\n(not given)\n\nActual result\n-------------\n(not given)\n\nClient\n------\nbrowser       Chrome 140\nos            Linux\nlanguage      it\n\nRecent activity (0, oldest first)\n---------------------------------\n(none)\n\nContains no map, map name, annotation, chat, asset, account, e-mail address, network address or credential.\n",
+        "issue_prefilled": {
+          "title": "[AUCOM] Build & Run does not highlight the current step",
+          "body": "<!-- auto-pigeon-bug-report/1.0 0123456789abcdef0123456789abcdef -->\nFiled by the reporter from Auto-Pigeon's prefilled form, after reviewing this exact text.\n\n```text\nAuto-Pigeon bug report (auto-pigeon-bug-report/1.0)\nIf you submit it, this report is published PUBLICLY at https://github.com/auto-pigeon/bug-reports.\n\nreport        0123456789abcdef0123456789abcdef\ncreated       2026-09-22T12:00:00.000Z\ncomponent     AUCOM\nrelease       1.214\nenvironment   development\nkind          cold\n\nSummary\n-------\nBuild & Run does not highlight the current step\n\nSteps to reproduce\n------------------\n(not given)\n\nExpected result\n---------------\n(not given)\n\nActual result\n-------------\n(not given)\n\nClient\n------\nbrowser       Chrome 140\nos            Linux\nlanguage      it\n\nRecent activity (0, oldest first)\n---------------------------------\n(none)\n\nContains no map, map name, annotation, chat, asset, account, e-mail address, network address or credential.\n```\n"
+        },
+        "issue_server": {
+          "title": "[AUCOM] Build & Run does not highlight the current step",
+          "body": "<!-- auto-pigeon-bug-report/1.0 0123456789abcdef0123456789abcdef -->\nFiled by Auto-Pigeon's server on behalf of a signed-in user who reviewed this exact text.\n\n```text\nAuto-Pigeon bug report (auto-pigeon-bug-report/1.0)\nIf you submit it, this report is published PUBLICLY at https://github.com/auto-pigeon/bug-reports.\n\nreport        0123456789abcdef0123456789abcdef\ncreated       2026-09-22T12:00:00.000Z\ncomponent     AUCOM\nrelease       1.214\nenvironment   development\nkind          cold\n\nSummary\n-------\nBuild & Run does not highlight the current step\n\nSteps to reproduce\n------------------\n(not given)\n\nExpected result\n---------------\n(not given)\n\nActual result\n-------------\n(not given)\n\nClient\n------\nbrowser       Chrome 140\nos            Linux\nlanguage      it\n\nRecent activity (0, oldest first)\n---------------------------------\n(none)\n\nContains no map, map name, annotation, chat, asset, account, e-mail address, network address or credential.\n```\n"
+        },
+        "prefill_url_length": 1254,
+        "prefill_fits": true,
+        "validation": {
+          "valid": true,
+          "errors": []
+        }
+      }
+    },
+    {
       "name": "canaries in every prohibited source",
       "input": {
         "component": "AUG",

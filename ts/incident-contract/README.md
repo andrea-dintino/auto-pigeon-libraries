@@ -229,6 +229,14 @@ if (built.ok) {
   how AUB declines to publish text the client did not already show the user.
 - `report_id` is minted once per report and is the server route's idempotency key.
 
+## 1.3.0 — AUCOM files bug reports
+
+`AUCOM` joins the bug report's `component` (in `bug-report-rules.json` and the schema enum), so the
+Companion's page can build, preview and file the same `auto-pigeon-bug-report/1.0` document AUP and
+AUG do; the vectors gain an `AUCOM cold report`. Only the permitted value changed — the document's
+shape, bounds and renderings did not. AUB embeds both files and the vectors and must re-embed them;
+AUG and AUC vendor the whole package and AUCOM vendors `schema/` and `src/`, and each must re-vendor.
+
 ## Stack frames for source-map symbolication (since 1.2.0)
 
 `stackFrames(error.stack, { origin: location.origin })` keeps only frames from the application's
