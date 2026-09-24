@@ -21,8 +21,9 @@
 
 # APMap 1.0
 
-APMap is the native JSON geometry-document format shared by **AI Map Copilot**
-(AIM), **Auto-Pigeon** (AUP), and the future collaboration service.
+APMap is the native JSON geometry-document format produced by the **Auto-Pigeon
+extractor** (AUE) and shared by **Auto-Pigeon** (AUP), its backend (AUB), and the
+collaboration service (AUC).
 
 One `.apmap` file is **one geometry document or one prefab geometry layer**. It
 carries geometry, stable identity, coordinate-frame information, the object
@@ -108,7 +109,7 @@ map_dialect: quake_standard  valve_220  quake2_extended  quake3_extended  vmf
 
 A 1.0 consumer that does not implement a reserved name must reject the document
 rather than guess. Quake 2-style trailing numeric face values still round-trip
-verbatim in `face.tail` (§6.3) because AIM's parser already carries them; 1.0
+verbatim in `face.tail` (§6.3) because the MAP parser carries them; 1.0
 does not interpret them.
 
 ---
@@ -166,7 +167,7 @@ brush id used where an entity id belongs a schema error, not a silent bug.
 | `derived` | every object carries `derived_from`, and its id **equals** the digest of that record's identity inputs. Verifiable and reproducible. |
 | `minted` | ids are opaque and producer-assigned. `derived_from`, if present, is provenance only and is not checked. |
 
-AIM emits `derived`, so regenerating a package reproduces byte-identical ids.
+AUE emits `derived`, so regenerating a package reproduces byte-identical ids.
 
 ### 3.5 The derivation algorithm
 
@@ -318,7 +319,7 @@ round-trips exactly.
 }
 ```
 
-This mirrors AIM's internal model exactly, where an entity is a tuple of
+This mirrors the MAP parser's model exactly, where an entity is a sequence of
 `KeyValue | Brush`. A representation with a separate properties map and brushes
 array could not round-trip either a repeated key or the ordering above.
 
@@ -382,7 +383,7 @@ uninterpreted in 1.0:
 "tail": [1, 0, 0]
 ```
 
-Absent when the source face had none. AIM's parser already reads and writes
+Absent when the source face had none. The MAP parser reads and writes
 these, so they survive a round trip without 1.0 assigning them meaning.
 
 ---
@@ -396,7 +397,7 @@ A face invented by a generator — a context-crop cap — declares itself:
   "face_id": "fac_...",
   "derived_from": {
     "kind": "synthetic",
-    "generator": "ai-mapcopilot.context_crop",
+    "generator": "auto-pigeon-extractor.context_crop",
     "reason": "context_crop"
   },
   "plane": { "points": [ ] },
@@ -430,11 +431,11 @@ One typed edge shape, referencing stable object ids:
 ]
 ```
 
-The registry is seeded only with relations AIM actually emits today:
+The registry is seeded only with relations AUE actually emits today:
 
 | type | meaning | evidence |
 | --- | --- | --- |
-| `entity_target` | `target` → `targetname` edge | AIM `entity_graph` |
+| `entity_target` | `target` → `targetname` edge | AUE `entitygraph` |
 | `assembly_member` | members of one extracted assembly | `provenance.assembly_id`, e.g. `e1m4:e30+e31` |
 | `activation_source` | what triggers an entity | `activation.json` raw_sources |
 
@@ -451,7 +452,7 @@ Namespaced vendor data, the only open bag in the format:
 
 ```json
 "extensions": {
-  "ai-mapcopilot.context_crop": { "display_only": true, "margin": [128, 128, 128] }
+  "auto-pigeon-extractor.context_crop": { "display_only": true, "margin": [128, 128, 128] }
 }
 ```
 
@@ -679,7 +680,7 @@ Two producers given the same document must emit the same bytes.
 | SER-8 | a document that must be reproducible carries no wall-clock timestamp. `provenance.generated_at` is permitted but forfeits byte determinism |
 | SER-9 | non-ASCII characters are emitted literally, not `\u`-escaped |
 
-SER-7 matches AIM's MAP writer, which already emits `192` rather than `192.0`,
+SER-7 matches AUE's MAP writer, which emits `192` rather than `192.0`,
 so nothing is lost crossing between the two formats.
 
 Canonical encoding is a **fixed point**: decoding a canonical document and
@@ -741,16 +742,15 @@ keys, verbatim
 
 | lost | why |
 | --- | --- |
-| `//` comments | AIM's tokenizer discards them at the line level |
+| `//` comments | the MAP tokenizer discards them at the line level |
 | whitespace and indentation | the writer re-emits its own layout |
 | number spelling (`0.50` vs `0.5`, `+3` vs `3`) | numbers are re-normalized by SER-7 |
 | source line and column | only entity/brush/face indices survive, in `derived_from` |
-| brush primitives, bezier patches, Quake 3 patch meshes | AIM's parser does not read them; a document containing them cannot be imported at all |
+| brush primitives, bezier patches, Quake 3 patch meshes | the MAP parser does not read them; a document containing them cannot be imported at all |
 
 An unedited `.map` therefore re-exports **semantically identical, not
-byte-identical**. That is the same guarantee AIM's existing
-`round_trip_equivalence` check already proves for extraction, at 0.0 plane error
-and 0.0 UV error.
+byte-identical**. That is the same guarantee AUE's extraction round-trip
+equivalence check proves, at 0.0 plane error and 0.0 UV error.
 
 ### Lost on export (APMap → `.map`)
 

@@ -8,8 +8,8 @@ aliases, their directory names, and where to clone them from. It validates again
 
 The repository list used to exist three times: in `clone-auto-pigeon-stack.sh`, in
 `pull-auto-pigeon-stack.sh`, and in a `workspace.json` at the workspace root. The root file was
-removed because it had gone stale in the worst possible way — it listed `ai-mapcopilot`, which is
-legacy, and omitted `auto-pigeon-gallery` and `auto-pigeon-extractor`, two repositories the launcher
+removed because it had gone stale in the worst possible way — it listed a repository that is no
+longer part of the project, and omitted `auto-pigeon-gallery` and `auto-pigeon-extractor`, two repositories the launcher
 actually needs. A list that names the wrong repositories is worse than no list, because it certifies
 a layout nobody checked.
 
@@ -30,8 +30,8 @@ machine**. The two are different questions and the agent tooling asks both, so i
   mean. A repository is in the default set because it was added here on purpose.
 
 `AUCOM` (`auto-pigeon-companion`) joined at `20260906_120V`. `auto-pigeon-launcher` (AUL) is being
-merged into and superseded by it, and `ai-mapcopilot` (AIM) is legacy: both stay OUT of this list
-while remaining addressable by alias for as long as their checkouts exist. Adding a retiring
+merged into and superseded by it: it stays OUT of this list while remaining addressable by alias
+for as long as its checkout exists. Adding a retiring
 repository here would put it into every clone, every pull and every drain.
 
 Order is presentational and the schema says so — but it is stable, and the tests assert it, because

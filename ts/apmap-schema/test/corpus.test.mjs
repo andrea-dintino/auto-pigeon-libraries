@@ -25,7 +25,6 @@ const validate11 = compile(loadCurrentSchema());
 /** The corpora, widest first. Each is APMap 1.0 written by a producer that has never heard of 1.1. */
 const CORPORA = [
   ['clean full-map corpus', 'LLM/generated/apmap/clean-corpus'],
-  ['AIM codec exports', 'LLM/generated/apmap/aim-codec'],
 ];
 
 /**

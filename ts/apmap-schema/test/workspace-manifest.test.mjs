@@ -27,9 +27,9 @@ const schema = readJson(path.join(WORKSPACE_DIR, 'auto-pigeon-workspace.schema.j
  * AUCOM joined at `20260906_120V`, by product decision: `auto-pigeon-companion` is a canonical
  * Auto-Pigeon repository with its own queue, and `auto-pigeon-launcher` (AUL) is being merged into
  * and superseded by it. This list is what a bare whole-workspace drain and every unfiltered
- * topology report mean by "the repositories this project is MADE of" — so AUL and the legacy
- * `ai-mapcopilot` (AIM) stay OUT of it deliberately, while remaining explicitly addressable local
- * checkouts for as long as they are on disk. Membership here is a product decision; a directory
+ * topology report mean by "the repositories this project is MADE of" — so AUL stays OUT of it
+ * deliberately, while remaining an explicitly addressable local checkout for as long as it is on
+ * disk. Membership here is a product decision; a directory
  * merely existing beside the others is not.
  */
 const CANONICAL = {
@@ -65,14 +65,14 @@ test('the manifest keeps its declared order', () => {
 
 /**
  * The manifest answers "what is this project MADE of", never "what is checked out here". A
- * repository that is being retired (AUL, superseded by AUCOM) or is legacy (AIM) is addressable by
- * the agent tooling while its checkout exists, and must not be in the shared topology: adding it
+ * repository that is being retired (AUL, superseded by AUCOM) is addressable by the agent tooling
+ * while its checkout exists, and must not be in the shared topology: adding it
  * would put it in every clone, every pull and every bare drain.
  */
-test('retired and legacy checkouts are not canonical topology', () => {
+test('a retiring checkout is not canonical topology', () => {
   const directories = new Set(manifest.repositories.map((entry) => entry.directory));
-  for (const outside of ['auto-pigeon-launcher', 'ai-mapcopilot'])
-    assert.equal(directories.has(outside), false, `${outside} is not a canonical workspace repository`);
+  assert.equal(directories.has('auto-pigeon-launcher'), false,
+    'auto-pigeon-launcher is not a canonical workspace repository');
 });
 
 test('every clone URL ends in the repository directory name', () => {

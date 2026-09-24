@@ -1,7 +1,7 @@
 # `@auto-pigeon/apmap-schema`
 
-The canonical JSON Schema for **APMap**, the native JSON geometry document shared by AI Map Copilot,
-Auto-Pigeon, and the collaboration service.
+The canonical JSON Schema for **APMap**, the native JSON geometry document produced by the
+Auto-Pigeon extractor (AUE) and shared by Auto-Pigeon, its backend, and the collaboration service.
 
 **Schema and conformance vectors only — no runtime code.** The TypeScript reader, writer, and
 validator are a separate package.
