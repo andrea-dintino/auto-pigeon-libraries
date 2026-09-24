@@ -110,9 +110,30 @@ export function createIncident(fields: IncidentDraft): Incident;
 export function toSentryEvent(incident: Incident, options?: SentryEventOptions): Record<string, unknown>;
 export function toDiagnosticText(incident: Incident): string;
 
-// ---- The user bug report (auto-pigeon-bug-report/1.0) -------------------------------------------
+// ---- The user bug report (auto-pigeon-bug-report/1.1) -------------------------------------------
 
 export type BugReportComponent = "AUP" | "AUG" | "AUCOM";
+export type BugReportType = "bug" | "feature_request";
+export type BugReportArea =
+  | "editor" | "transform" | "textures" | "import_export" | "prefabs_extract" | "collaboration"
+  | "compile_run" | "gallery" | "companion" | "account_access" | "documentation" | "other";
+/** The areas each application offers — bug-report-rules.json `applications`, as a type. */
+export interface BugReportAreasByComponent {
+  AUP: "editor" | "transform" | "textures" | "import_export" | "prefabs_extract" | "collaboration" | "compile_run" | "account_access" | "documentation" | "other";
+  AUG: "gallery" | "account_access" | "documentation" | "other";
+  AUCOM: "companion" | "compile_run" | "import_export" | "documentation" | "other";
+}
+export type BugReportAreaOf<C extends BugReportComponent> = BugReportAreasByComponent[C];
+export type BugReportApplicationLabel = BugReportComponent;
+export type BugReportTypeLabel = "Bug" | "Feature request";
+export type BugReportAreaLabel =
+  | "Area: Editor" | "Area: Transform" | "Area: Textures" | "Area: Import / Export" | "Area: Prefabs / Extract"
+  | "Area: Collaboration" | "Area: Compile / Run" | "Area: Gallery" | "Area: Companion"
+  | "Area: Account / Access" | "Area: Documentation" | "Area: Other";
+/** Exactly three labels, in this order: application, report type, area. */
+export type BugReportLabels = readonly [BugReportApplicationLabel, BugReportTypeLabel, BugReportAreaLabel];
+export type BugReportSchemaStatus = "current" | "previous" | "expired" | "unsupported";
+export interface BugReportHeadings { summary: string; steps: string; expected: string; actual: string }
 export type BugReportRoute = "prefilled" | "server";
 
 export interface BugReportRecent {
@@ -124,14 +145,17 @@ export interface BugReportRecent {
   correlation_id?: string;
 }
 
-export interface BugReportDocument {
-  schema: "auto-pigeon-bug-report/1.0";
+/** A document of one application: its `area` can only be one that application offers. */
+export interface BugReportDocumentOf<C extends BugReportComponent> {
+  schema: "auto-pigeon-bug-report/1.1";
   report_id: string;
   created_at: string;
-  component: BugReportComponent;
+  component: C;
   release: string;
   environment: string;
   kind: "cold" | "incident";
+  report_type: BugReportType;
+  area: BugReportAreaOf<C>;
   user: { summary: string; steps: string; expected: string; actual: string };
   incident?: {
     incident_id: string;
@@ -159,8 +183,14 @@ export interface BugReportDocument {
   omitted_recent: number;
 }
 
-export interface BugReportInput {
-  component: BugReportComponent;
+export type BugReportDocument = BugReportDocumentOf<"AUP"> | BugReportDocumentOf<"AUG"> | BugReportDocumentOf<"AUCOM">;
+
+export interface BugReportInputOf<C extends BugReportComponent> {
+  component: C;
+  /** Required for a cold report; an incident-triggered report defaults to "bug". */
+  reportType?: BugReportType;
+  /** Required for a cold report; an incident-triggered report defaults to `suggestBugReportArea`. */
+  area?: BugReportAreaOf<C>;
   release?: string;
   environment?: string;
   reportId?: string;
@@ -182,22 +212,33 @@ export interface BugReportInput {
   recent?: Array<Partial<BugReportRecent> & { at?: string | number | Date }>;
 }
 
+export type BugReportInput = BugReportInputOf<"AUP"> | BugReportInputOf<"AUG"> | BugReportInputOf<"AUCOM">;
+
 export type BugReportBuild =
   | { ok: true; document: BugReportDocument; prefill: { fits: boolean } }
   | { ok: false; errors: string[] };
 
-export const BUG_REPORT_SCHEMA: "auto-pigeon-bug-report/1.0";
+export const BUG_REPORT_SCHEMA: "auto-pigeon-bug-report/1.1";
 export const BUG_REPORT_REPOSITORY: string;
 export const BUG_REPORT_LIMITS: Readonly<Record<string, number>>;
+export const BUG_REPORT_TYPES: readonly BugReportType[];
+export const BUG_REPORT_AREAS: readonly BugReportArea[];
 export const bugReportRules: Record<string, unknown>;
 export const bugReportSchema: Record<string, unknown>;
+export const bugReportSchemaPrevious: Record<string, unknown>;
+export function bugReportAreasFor<C extends BugReportComponent>(component: C): BugReportAreaOf<C>[];
+export function bugReportHeadings(reportType: BugReportType): BugReportHeadings;
+export function suggestBugReportArea<C extends BugReportComponent>(component: C, incident: Partial<Incident> | undefined): BugReportAreaOf<C> | undefined;
+export function bugReportSchemaStatus(schema: unknown, now?: Date | string | number): BugReportSchemaStatus;
+/** `null` when the document cannot be classified exactly (never a partial or a fourth label). */
+export function bugReportLabels(document: unknown): BugReportLabels | null;
 export function sanitizeReportText(value: unknown, max: number, options?: { multiline?: boolean }): string;
 export function coarseBrowser(userAgent: unknown): string | undefined;
 export function coarseOs(userAgent: unknown): string | undefined;
 export function buildBugReport(input: BugReportInput): BugReportBuild;
 export function canonicalReportJson(document: BugReportDocument): string;
 export function reportJsonDownload(document: BugReportDocument): string;
-export function validateBugReport(document: unknown): ValidationResult;
+export function validateBugReport(document: unknown, options?: { acceptPrevious?: boolean }): ValidationResult;
 export function renderReportText(document: BugReportDocument): string;
 export function renderIssue(document: BugReportDocument, options?: { route?: BugReportRoute }): { title: string; body: string };
 export function prefilledIssueUrl(document: BugReportDocument): string;

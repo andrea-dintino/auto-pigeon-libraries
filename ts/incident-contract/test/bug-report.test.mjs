@@ -6,6 +6,15 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020.js";
 import {
+  BUG_REPORT_AREAS,
+  BUG_REPORT_TYPES,
+  bugReportAreasFor,
+  bugReportHeadings,
+  bugReportLabels,
+  bugReportRules,
+  bugReportSchemaPrevious,
+  bugReportSchemaStatus,
+  suggestBugReportArea,
   BUG_REPORT_LIMITS,
   BUG_REPORT_URL,
   buildBugReport,
@@ -103,7 +112,7 @@ test("the validation vectors reproduce", () => {
 });
 
 test("a document that is too large is refused", () => {
-  const built = buildBugReport({ component: "AUP", reportId: "0".repeat(32), now: 0, user: { summary: "x" } }).document;
+  const built = buildBugReport({ component: "AUP", reportType: "bug", area: "editor", reportId: "0".repeat(32), now: 0, user: { summary: "x" } }).document;
   const huge = { ...built, user: { ...built.user, steps: "x".repeat(40000) } };
   assert.ok(validateBugReport(huge).errors.includes("document:too_large"));
 });
@@ -118,5 +127,156 @@ test("building never throws, whatever it is handed", () => {
   for (const input of [undefined, null, {}, { component: "AUP" }, { component: "AUP", user: null }, { component: "AUP", user: { summary: 7 } }]) {
     const out = buildBugReport(input ?? undefined);
     assert.equal(out.ok, false);
+  }
+});
+
+// ---- 1.1: classification ---------------------------------------------------------------------
+
+const codes = JSON.parse(readFileSync(new URL("../schema/incident-codes.json", import.meta.url), "utf8"));
+const RID = "0123456789abcdef0123456789abcdef";
+const NOW = "2026-09-22T12:00:00.000Z";
+const catalogue = bugReportRules.label_catalogue.labels.map((label) => label.name);
+const cold = (component, reportType, area, user = { summary: "x" }) =>
+  buildBugReport({ component, reportType, area, reportId: RID, now: NOW, user });
+
+test("every valid document, of every application, type and offered area, has exactly one label of each kind", () => {
+  const apps = Object.keys(bugReportRules.applications);
+  const typeLabels = Object.values(bugReportRules.report_types).map((type) => type.label);
+  const areaLabels = Object.values(bugReportRules.areas);
+  let seen = 0;
+  for (const component of apps) {
+    for (const reportType of BUG_REPORT_TYPES) {
+      for (const area of bugReportAreasFor(component)) {
+        const built = cold(component, reportType, area);
+        assert.ok(built.ok, `${component}/${reportType}/${area}`);
+        assert.ok(schemaValid(built.document), JSON.stringify(schemaValid.errors));
+        const labels = bugReportLabels(built.document);
+        assert.equal(labels.length, 3);
+        assert.equal(labels.filter((label) => apps.includes(label)).length, 1);
+        assert.equal(labels.filter((label) => typeLabels.includes(label)).length, 1);
+        assert.equal(labels.filter((label) => areaLabels.includes(label)).length, 1);
+        assert.deepEqual(labels, [component, bugReportRules.report_types[reportType].label, bugReportRules.areas[area]]);
+        for (const label of labels) assert.ok(catalogue.includes(label), `${label} is not in the label catalogue`);
+        seen += 1;
+      }
+    }
+  }
+  assert.equal(seen, 2 * (10 + 4 + 5));
+});
+
+test("an application can only carry its own application label, whatever else the document says", () => {
+  for (const component of ["AUP", "AUG", "AUCOM"]) {
+    const built = cold(component, "bug", "other");
+    const others = ["AUP", "AUG", "AUCOM"].filter((c) => c !== component);
+    assert.equal(bugReportLabels(built.document)[0], component);
+    for (const other of others) assert.ok(!bugReportLabels(built.document).includes(other));
+  }
+});
+
+test("a type, an area or a component outside the closed sets never yields labels", () => {
+  const good = cold("AUP", "bug", "editor").document;
+  for (const bad of [
+    { ...good, component: "AUB" },
+    { ...good, report_type: "Bug" },
+    { ...good, report_type: ["bug", "feature_request"] },
+    { ...good, area: "Area: Editor" },
+    { ...good, area: ["editor", "transform"] },
+    { ...good, area: "gallery" },
+    { ...good, schema: "auto-pigeon-bug-report/2.0" },
+    (() => { const d = { ...good }; delete d.area; return d; })(),
+    null, "AUP", [],
+  ]) {
+    assert.equal(bugReportLabels(bad), null, JSON.stringify(bad)?.slice(0, 80));
+  }
+  assert.equal(cold("AUG", "bug", "transform").ok, false);
+  assert.deepEqual(cold("AUG", "bug", "transform").errors, ["area_invalid"]);
+  assert.deepEqual(buildBugReport({ component: "AUP", reportId: RID, now: NOW, user: { summary: "x" } }).errors, ["report_type_required", "area_required"]);
+});
+
+test("the JSON schema refuses what the validator refuses: cross-application areas, missing or extra classification", () => {
+  const good = cold("AUCOM", "feature_request", "companion").document;
+  assert.ok(schemaValid(good));
+  assert.ok(!schemaValid({ ...good, area: "editor" }), "AUCOM does not offer editor");
+  assert.ok(!schemaValid({ ...good, report_type: "question" }));
+  assert.ok(!schemaValid({ ...good, labels: ["AUCOM"] }));
+  const missing = { ...good }; delete missing.report_type;
+  assert.ok(!schemaValid(missing));
+});
+
+test("every incident code in the taxonomy maps to an area, and the mapping is a pure function of typed fields", () => {
+  const byCode = bugReportRules.incident_areas.by_code;
+  assert.deepEqual(Object.keys(byCode).sort(), codes.codes.map((c) => c.code).sort(), "incident_areas.by_code must cover the taxonomy exactly");
+  for (const area of Object.values(byCode)) assert.ok(BUG_REPORT_AREAS.includes(area));
+  for (const [component, table] of Object.entries(bugReportRules.incident_areas.by_subsystem)) {
+    for (const area of Object.values(table)) assert.ok(bugReportAreasFor(component).includes(area), `${component} does not offer ${area}`);
+  }
+  for (const entry of committed.suggest_area) {
+    assert.equal(suggestBugReportArea(entry.component, entry.incident), entry.expected);
+    assert.ok(bugReportAreasFor(entry.component).includes(entry.expected), `${entry.component} was suggested ${entry.expected}`);
+    assert.equal(suggestBugReportArea(entry.component, { ...entry.incident, message: "Area: Textures transform editor" }), entry.expected, "prose is never read");
+  }
+  assert.equal(suggestBugReportArea("AUP", { code: "editor.transform.failed" }), "transform");
+  assert.equal(suggestBugReportArea("AUG", { code: "aug.error", subsystem: "auth" }), "account_access");
+  assert.equal(suggestBugReportArea("AUCOM", { code: "aue.job_failed" }), "other", "an area the application does not offer becomes other");
+  assert.equal(suggestBugReportArea("AUP", undefined), undefined);
+});
+
+test("an incident report defaults to Bug and the suggested area, and the user can change either before preview", () => {
+  const incident = { incident_id: "a".repeat(32), code: "auc.disconnected", severity: "error", recoverable: true };
+  const suggested = buildBugReport({ component: "AUP", reportId: RID, now: NOW, user: { summary: "x" }, incident });
+  assert.equal(suggested.document.report_type, "bug");
+  assert.equal(suggested.document.area, "collaboration");
+  const corrected = buildBugReport({ component: "AUP", reportType: "feature_request", area: "textures", reportId: RID, now: NOW, user: { summary: "x" }, incident });
+  assert.equal(corrected.document.report_type, "feature_request");
+  assert.equal(corrected.document.area, "textures");
+  assert.deepEqual(bugReportLabels(corrected.document), ["AUP", "Feature request", "Area: Textures"]);
+});
+
+test("bug and feature-request reports render their own headings, with the same bounds and redaction", () => {
+  const user = { summary: "s", steps: "mail a.b@example.invalid", expected: "e", actual: "a" };
+  const bug = renderReportText(cold("AUP", "bug", "editor", user).document);
+  const feature = renderReportText(cold("AUP", "feature_request", "editor", user).document);
+  for (const heading of Object.values(bugReportHeadings("bug"))) assert.ok(bug.includes(`\n${heading}\n`), heading);
+  for (const heading of Object.values(bugReportHeadings("feature_request"))) assert.ok(feature.includes(`\n${heading}\n`), heading);
+  assert.ok(!feature.includes("Steps to reproduce") && !bug.includes("Use case"));
+  assert.match(bug, /^Auto-Pigeon bug report \(/);
+  assert.match(feature, /^Auto-Pigeon feature request \(/);
+  for (const text of [bug, feature]) assert.ok(!text.includes("a.b@example.invalid"));
+  const long = cold("AUP", "feature_request", "editor", { summary: "x", steps: "y".repeat(5000) }).document;
+  assert.equal(Array.from(long.user.steps).length, BUG_REPORT_LIMITS.steps);
+});
+
+test("the prefilled URL carries exactly the three labels and its length accounting includes them", () => {
+  for (const entry of committed.reports.filter((r) => r.expected.ok)) {
+    const url = new URL(prefilledIssueUrl(entry.expected.document));
+    assert.deepEqual(url.searchParams.get("labels").split(","), entry.expected.labels, entry.name);
+    assert.equal(prefilledIssueUrl(entry.expected.document).length, entry.expected.prefill_url_length);
+    if (entry.expected.prefill_fits) assert.ok(entry.expected.prefill_url_length <= BUG_REPORT_LIMITS.prefill_url);
+  }
+});
+
+test("the previous version is accepted only when asked, only until its bound, and is labelled Bug + Area: Other", () => {
+  for (const entry of committed.previous) {
+    assert.deepEqual(validateBugReport(entry.document, entry.options), entry.expected.validation, entry.name);
+    assert.deepEqual(bugReportLabels(entry.document), entry.expected.labels, entry.name);
+  }
+  assert.deepEqual(committed.previous[1].expected.labels, ["AUP", "Bug", "Area: Other"]);
+  for (const entry of committed.schema_status) assert.equal(bugReportSchemaStatus(entry.schema, entry.now), entry.expected);
+  const ajvPrevious = ajv.compile(bugReportSchemaPrevious);
+  assert.ok(ajvPrevious(committed.previous[1].document));
+});
+
+test("the label catalogue is exactly the taxonomy, with no workflow label", () => {
+  const expected = [
+    ...Object.values(bugReportRules.applications).map((a) => a.label),
+    ...Object.values(bugReportRules.report_types).map((t) => t.label),
+    ...Object.values(bugReportRules.areas),
+    "Already tracked elsewhere",
+  ];
+  assert.deepEqual([...catalogue].sort(), [...expected].sort());
+  for (const label of bugReportRules.label_catalogue.labels) {
+    assert.match(label.color, /^[0-9A-F]{6}$/);
+    assert.ok(label.description.length > 0 && label.description.length <= 100);
+    assert.ok(!/triage|confirmed|duplicate|priority|severity|privacy|progress/i.test(label.name), label.name);
   }
 });

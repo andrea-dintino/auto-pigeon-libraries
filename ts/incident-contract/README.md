@@ -194,26 +194,28 @@ ts/incident-contract/
 
 Run it with `./run.sh test` from the repository root, or `npm test` here.
 
-## The user bug report — `auto-pigeon-bug-report/1.0` (since 1.2.0)
+## The user bug report — `auto-pigeon-bug-report/1.1` (since 1.4.0; 1.0 since 1.2.0)
 
 A bug report is **published publicly** on `https://github.com/auto-pigeon/bug-reports`, so it is
 ONE document with ONE set of renderings, and nothing is added after the user has seen it.
 
 | | |
 | --- | --- |
-| `schema/bug-report-1.0.schema.json` | the CLOSED document: user summary/steps/expected/actual, component, release, environment, an incident by **code** (never its message), coarse client facts, and at most 30 recent machine-named activities |
-| `schema/bug-report-rules.json` | bounds, the removed code points (C0/C1, bidi, zero-width), and the patterns — read by AUB's Go re-validation too |
+| `schema/bug-report-1.1.schema.json` | the CLOSED document: user summary/steps/expected/actual, component, **report type and area**, release, environment, an incident by **code** (never its message), coarse client facts, and at most 30 recent machine-named activities |
+| `schema/bug-report-1.0.schema.json` | the previous version, which a server may still accept until `previous_schemas[].accepted_until` |
+| `schema/bug-report-rules.json` | bounds, the removed code points (C0/C1, bidi, zero-width), the patterns, and since 1.4.0 the classification: report types and their headings, areas, which areas each application offers, the incident-to-area mapping, the previous version's acceptance bound and the exact GitHub label catalogue — read by AUB's Go re-validation too |
 | `fixtures/bug-report-vectors.json` | generated cross-language vectors, including redaction canaries in every prohibited source (`npm run vectors`) |
 
 ```js
 import { buildBugReport, renderReportText, reportJsonDownload, renderIssue, prefilledIssueUrl } from "@auto-pigeon/incident-contract";
 
-const built = buildBugReport({ component: "AUP", release, environment, user: { summary, steps, expected, actual }, incident, client, recent });
+const built = buildBugReport({ component: "AUP", reportType: "bug", area: "editor", release, environment, user: { summary, steps, expected, actual }, incident, client, recent });
 if (built.ok) {
   renderReportText(built.document);                     // the preview text and the .txt download
   reportJsonDownload(built.document);                   // the .json download (canonical, key-sorted)
   prefilledIssueUrl(built.document);                    // GitHub's prefilled form — opens, never submits
   renderIssue(built.document, { route: "server" });     // exactly what AUB's POST /api/bug-reports files
+  bugReportLabels(built.document);                      // ["AUP", "Bug", "Area: Editor"] — the ONLY label derivation
 }
 ```
 
@@ -228,6 +230,41 @@ if (built.ok) {
 - **`validateBugReport` refuses a non-canonical document** (`user.steps:not_canonical`), which is
   how AUB declines to publish text the client did not already show the user.
 - `report_id` is minted once per report and is the server route's idempotency key.
+
+## 1.4.0 — every report is classified: application, type, area (`auto-pigeon-bug-report/1.1`)
+
+Every report filed on `auto-pigeon/bug-reports` carries **exactly three labels**: its application
+(`AUP`, `AUG` or `AUCOM` — the `component`, never user-editable), its type (`Bug` or `Feature
+request`) and one primary area (`Area: Editor` … `Area: Other`). There are no workflow labels; the
+only other label, `Already tracked elsewhere`, is applied by hand when closing.
+
+- The document gains two required closed fields, `report_type` (`bug | feature_request`) and `area`
+  (one machine id). `kind` still means only cold versus incident. The schema refuses an area the
+  reporting application does not offer (`bugReportAreasFor(component)`), and the TypeScript types
+  make it a compile error (`BugReportDocumentOf<"AUG">["area"]`).
+- `bugReportLabels(document)` is the one derivation: AUB's server route, the prefilled URL and every
+  test use it or the same data. It returns `null` — never a partial list — for anything it cannot
+  classify exactly, and never takes a label string from a client.
+- An incident-triggered report defaults to `bug` and to `suggestBugReportArea(component, incident)`:
+  an exact subsystem entry for the application, else the exact incident-code entry (every code in the
+  taxonomy is mapped; a test fails when one is not), else `other`. The user may change both.
+- A feature request renders **Use case / Desired result / Current limitation** in place of
+  **Steps to reproduce / Expected result / Actual result** (`bugReportHeadings(type)`); the bounded
+  fields, their limits and their redaction are unchanged.
+- `prefilledIssueUrl` adds GitHub's `labels` query parameter, and its length counts toward
+  `prefill_url`. GitHub applies that parameter only for a reporter allowed to label issues in the
+  repository, so for ordinary visitors the prefilled issue may arrive unlabelled; the server route is
+  the path whose three labels are guaranteed.
+- **Rolling compatibility.** `validateBugReport(doc, { acceptPrevious: true })` also accepts a
+  `auto-pigeon-bug-report/1.0` document, and `bugReportSchemaStatus(schema, now)` says whether it is
+  still inside `previous_schemas[0].accepted_until` (2026-11-30T23:59:59.999Z). `bugReportLabels`
+  labels such a document `Bug` + `Area: Other`. Clients never emit 1.0.
+- `label_catalogue` lists the exact labels with deterministic colours and descriptions, for the
+  repository bootstrap.
+
+AUB embeds the schemas, the rules and the vectors, and must re-embed them (including the new
+`bug-report-1.1.schema.json`). AUG and AUC vendor the whole package, and AUCOM vendors `schema/` and
+`src/`; each must re-vendor it.
 
 ## 1.3.0 — AUCOM files bug reports
 
