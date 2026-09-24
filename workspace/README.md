@@ -37,6 +37,23 @@ repository here would put it into every clone, every pull and every drain.
 Order is presentational and the schema says so — but it is stable, and the tests assert it, because
 a generated alias table and a drain plan have to read the same on every machine.
 
+## A directory is not always the repository's hosted name
+
+The repositories live in the [`auto-pigeon`](https://github.com/auto-pigeon) GitHub organization.
+Every checkout's directory is its repository's name there, with one exception: AUP's canonical
+repository is `auto-pigeon/auto-pigeon-editor`, and its checkout, prompt queue and handoffs are
+still called `auto-pigeon`, because every queue, handoff and runner keys on the directory. That
+entry says so with `repository_name`, and the tests require the clone URL to end in
+`repository_name` when it is present and in `directory` otherwise — so a deliberate difference is
+declared, and a typo still fails.
+
+```sh
+git clone https://github.com/auto-pigeon/auto-pigeon-editor.git auto-pigeon
+```
+
+`auto-pigeon-tools/scripts/repo_registry.py` resolves the hosted name as a spelling of the checkout:
+`repo_registry.py resolve auto-pigeon-editor --workspace ..` prints `auto-pigeon`.
+
 ## What it deliberately does not contain
 
 - **Machine paths.** No `/home/...`, no absolute anything. `directory` is a bare name.

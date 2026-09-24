@@ -75,12 +75,30 @@ test('a retiring checkout is not canonical topology', () => {
     'auto-pigeon-launcher is not a canonical workspace repository');
 });
 
-test('every clone URL ends in the repository directory name', () => {
+test('every clone URL ends in the repository directory name, or in its declared repository_name', () => {
   // A mismatch would clone a repository into a directory named after a different one, which the
   // clone script cannot detect: it derives the destination from `directory`, not from the URL.
+  // A deliberate difference is declared, never inferred: `repository_name` names it.
   for (const entry of manifest.repositories)
-    assert.equal(entry.clone_url.split('/').pop(), `${entry.directory}.git`,
-      `${entry.alias}: clone_url and directory disagree`);
+    assert.equal(entry.clone_url.split('/').pop(), `${entry.repository_name ?? entry.directory}.git`,
+      `${entry.alias}: clone_url and ${entry.repository_name ? 'repository_name' : 'directory'} disagree`);
+});
+
+test('repository_name is declared only where it differs from directory', () => {
+  for (const entry of manifest.repositories)
+    if ('repository_name' in entry)
+      assert.notEqual(entry.repository_name, entry.directory,
+        `${entry.alias}: repository_name repeats directory; omit it`);
+});
+
+test('the repositories live in the auto-pigeon GitHub organization, and AUP is auto-pigeon-editor', () => {
+  // The repositories moved from a personal namespace to the organization on 2026-09-24. AUP's
+  // checkout keeps the directory `auto-pigeon`: queues, handoffs and runners key on it.
+  for (const entry of manifest.repositories)
+    assert.match(entry.clone_url, /^https:\/\/github\.com\/auto-pigeon\/[a-z0-9-]+\.git$/, entry.alias);
+  const aup = manifest.repositories.find((entry) => entry.alias === 'AUP');
+  assert.equal(aup.directory, 'auto-pigeon');
+  assert.equal(aup.repository_name, 'auto-pigeon-editor');
 });
 
 /**

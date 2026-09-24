@@ -22,6 +22,7 @@
           "alias": { "type": "string", "description": "The short uppercase alias used throughout the prompts, handoffs and agent tooling, e.g. \"AUP\".", "pattern": "^[A-Z][A-Z0-9]*$" },
           "directory": { "type": "string", "description": "The repository's directory name inside the workspace. A bare name, never a path: a manifest that could say \"../elsewhere\" would be describing one machine's layout rather than the workspace's shape.", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
           "clone_url": { "type": "string", "description": "The HTTPS clone URL. HTTPS only, so the clone scripts' credential-cache behaviour applies uniformly and no SSH key layout is assumed.", "pattern": "^https://[^\\s]+\\.git$" },
+          "repository_name": { "type": "string", "description": "The repository's name at its host, present only when it is not `directory`. The clone URL must end in it. AUP's canonical repository is auto-pigeon/auto-pigeon-editor while its checkout, queue and handoffs keep the directory name auto-pigeon: declaring the difference here is what tells it apart from a typo.", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
           "role": { "type": "string", "description": "One line on what the repository is for. Documentation; nothing branches on it.", "minLength": 1 }
         }
       }

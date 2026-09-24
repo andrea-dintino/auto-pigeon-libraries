@@ -6,55 +6,56 @@
     {
       "alias": "AUP",
       "directory": "auto-pigeon",
-      "clone_url": "https://github.com/andrea-dintino/auto-pigeon.git",
+      "repository_name": "auto-pigeon-editor",
+      "clone_url": "https://github.com/auto-pigeon/auto-pigeon-editor.git",
       "role": "Editor frontend and local workbench server."
     },
     {
       "alias": "AUB",
       "directory": "auto-pigeon-backend",
-      "clone_url": "https://github.com/andrea-dintino/auto-pigeon-backend.git",
+      "clone_url": "https://github.com/auto-pigeon/auto-pigeon-backend.git",
       "role": "Durable cloud state: accounts, maps, assets, definitions."
     },
     {
       "alias": "AUC",
       "directory": "auto-pigeon-collaboration",
-      "clone_url": "https://github.com/andrea-dintino/auto-pigeon-collaboration.git",
+      "clone_url": "https://github.com/auto-pigeon/auto-pigeon-collaboration.git",
       "role": "Realtime collaboration: rooms, leases, journal."
     },
     {
       "alias": "AUCOM",
       "directory": "auto-pigeon-companion",
-      "clone_url": "https://github.com/andrea-dintino/auto-pigeon-companion.git",
+      "clone_url": "https://github.com/auto-pigeon/auto-pigeon-companion.git",
       "role": "Companion desktop application: local profiles, toolchains, builds and engine launches."
     },
     {
       "alias": "AUE",
       "directory": "auto-pigeon-extractor",
-      "clone_url": "https://github.com/andrea-dintino/auto-pigeon-extractor.git",
+      "clone_url": "https://github.com/auto-pigeon/auto-pigeon-extractor.git",
       "role": "Extraction, format conversion and normalization."
     },
     {
       "alias": "AUG",
       "directory": "auto-pigeon-gallery",
-      "clone_url": "https://github.com/andrea-dintino/auto-pigeon-gallery.git",
+      "clone_url": "https://github.com/auto-pigeon/auto-pigeon-gallery.git",
       "role": "Gallery and public presentation."
     },
     {
       "alias": "AUT",
       "directory": "auto-pigeon-tools",
-      "clone_url": "https://github.com/andrea-dintino/auto-pigeon-tools.git",
+      "clone_url": "https://github.com/auto-pigeon/auto-pigeon-tools.git",
       "role": "Workspace tooling: launcher, agent task runner, clone and pull scripts."
     },
     {
       "alias": "AULIBS",
       "directory": "auto-pigeon-libraries",
-      "clone_url": "https://github.com/andrea-dintino/auto-pigeon-libraries.git",
+      "clone_url": "https://github.com/auto-pigeon/auto-pigeon-libraries.git",
       "role": "Shared libraries and canonical contracts. Holds this manifest and the APMap schema."
     },
     {
       "alias": "TEL",
       "directory": "auto-pigeon-telemetry",
-      "clone_url": "https://github.com/andrea-dintino/auto-pigeon-telemetry.git",
+      "clone_url": "https://github.com/auto-pigeon/auto-pigeon-telemetry.git",
       "role": "Deployment of the third-party observability software: GlitchTip, its PostgreSQL, Gatus."
     }
   ]
